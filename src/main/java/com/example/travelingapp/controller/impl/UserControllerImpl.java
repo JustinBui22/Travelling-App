@@ -1,14 +1,20 @@
-package controller.impl;
+package com.example.travelingapp.controller.impl;
 
-import controller.UserController;
-import dto.UserDTO;
+import com.example.travelingapp.controller.UserController;
+import com.example.travelingapp.util.HttpStatusCode;
+import com.example.travelingapp.dto.UserDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
-import service.UserService;
-import util.HttpStatusCode;
+import com.example.travelingapp.service.UserService;
+import org.springframework.web.bind.annotation.RestController;
 
+@RestController
 public class UserControllerImpl implements UserController {
-    private UserService userService;
+    private final UserService userService;
+
+    public UserControllerImpl(UserService userService) {
+        this.userService = userService;
+    }
 
     public ResponseEntity<HttpStatusCode> createNewUser(@RequestBody UserDTO registerRequest) {
         int response = userService.createNewUser(registerRequest);
@@ -20,17 +26,5 @@ public class UserControllerImpl implements UserController {
         return ResponseEntity.status(response).body(HttpStatusCode.valueOf(response));
     }
 }
-
-
-
-
-
-
-
-//        if ("user".equals(loginRequest.getUsername()) && "password".equals(loginRequest.getPassword())) {
-//            return ResponseEntity.ok("Login successful");
-//        } else {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
-//        }
 
 

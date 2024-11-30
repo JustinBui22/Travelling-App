@@ -1,4 +1,4 @@
-package dto;
+package com.example.travelingapp.dto;
 
 
 import lombok.Getter;

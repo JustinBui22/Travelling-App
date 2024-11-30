@@ -1,12 +1,12 @@
-package service.impl;
+package com.example.travelingapp.service.impl;
 
-import dto.UserDTO;
-import entity.User;
+import com.example.travelingapp.entity.User;
+import com.example.travelingapp.service.UserService;
+import com.example.travelingapp.util.HttpStatusCode;
+import com.example.travelingapp.dto.UserDTO;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
-import repository.UserRepository;
-import service.UserService;
-import util.HttpStatusCode;
+import com.example.travelingapp.repository.UserRepository;
 
 import java.util.Optional;
 
