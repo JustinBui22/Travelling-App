@@ -1,11 +1,10 @@
-package controller;
+package com.example.travelingapp.controller;
 
-import dto.UserDTO;
+import com.example.travelingapp.util.HttpStatusCode;
+import com.example.travelingapp.dto.UserDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import util.HttpStatusCode;
 
-@RestController
 @RequestMapping("/api/users/")
 public interface UserController {
     @PostMapping("/register")

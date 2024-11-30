@@ -1,4 +1,4 @@
-package entity;
+package com.example.travelingapp.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -32,8 +32,8 @@ public class User {
     @Column(name = "CreatedDate")
     private Date createdDate;
 
-    @Column
-    private Date referredCode;
+    @Column(name = "ReferredCode")
+    private String referredCode;
 
     public User(String username, String password, String email) {
         this.username = username;

@@ -1,4 +1,4 @@
-package util;
+package com.example.travelingapp.util;
 
 import lombok.Getter;
 import org.springframework.lang.Nullable;
@@ -145,8 +145,7 @@ public enum HttpStatusCode {
     }
 
     public String toString() {
-        int var10000 = this.value;
-        return "" + var10000 + " " + this.name();
+        return this.value + " " + this.name();
     }
 
     @Nullable
@@ -154,8 +153,7 @@ public enum HttpStatusCode {
         HttpStatusCode[] var1 = VALUES;
         int var2 = var1.length;
 
-        for(int var3 = 0; var3 < var2; ++var3) {
-            HttpStatusCode status = var1[var3];
+        for (HttpStatusCode status : var1) {
             if (status.value == statusCode) {
                 return status;
             }
@@ -164,7 +162,7 @@ public enum HttpStatusCode {
         return null;
     }
 
-    public static enum Series {
+    public enum Series {
         INFORMATIONAL(1),
         SUCCESSFUL(2),
         REDIRECTION(3),
@@ -175,7 +173,7 @@ public enum HttpStatusCode {
 
         private final int value;
 
-        private Series(int value) {
+        Series(int value) {
             this.value = value;
         }
 
@@ -204,8 +202,7 @@ public enum HttpStatusCode {
             Series[] var2 = values();
             int var3 = var2.length;
 
-            for(int var4 = 0; var4 < var3; ++var4) {
-                Series series = var2[var4];
+            for (Series series : var2) {
                 if (series.value == seriesCode) {
                     return series;
                 }
