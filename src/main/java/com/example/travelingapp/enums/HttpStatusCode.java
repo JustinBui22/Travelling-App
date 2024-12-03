@@ -1,16 +1,9 @@
-package com.example.travelingapp.util;
+package com.example.travelingapp.enums;
 
 import lombok.Getter;
 import org.springframework.lang.Nullable;
 
 public enum HttpStatusCode {
-    USERNAME_TAKEN(600, HttpStatusCode.Series.UNAUTHORIZED_ACTION, "Username is taken"),
-    EMAIL_TAKEN(601, HttpStatusCode.Series.UNAUTHORIZED_ACTION, "Email is registered"),
-    PASSWORD_NOT_QUALIFIED(602, HttpStatusCode.Series.UNAUTHORIZED_ACTION, "Password is not qualified"),
-
-
-
-
     CONTINUE(100, HttpStatusCode.Series.INFORMATIONAL, "Continue"),
     SWITCHING_PROTOCOLS(101, HttpStatusCode.Series.INFORMATIONAL, "Switching Protocols"),
     PROCESSING(102, HttpStatusCode.Series.INFORMATIONAL, "Processing"),
@@ -101,7 +94,7 @@ public enum HttpStatusCode {
     NETWORK_AUTHENTICATION_REQUIRED(511, HttpStatusCode.Series.SERVER_ERROR, "Network Authentication Required");
 
     private static final HttpStatusCode[] VALUES = values();
-    private final int value;
+    public final int value;
     private final Series series;
     @Getter
     private final String reasonPhrase;
@@ -119,6 +112,8 @@ public enum HttpStatusCode {
     public Series series() {
         return this.series;
     }
+
+    public String reasonPhrase() {return this.reasonPhrase;}
 
     public boolean is1xxInformational() {
         return this.series() == HttpStatusCode.Series.INFORMATIONAL;
@@ -167,9 +162,7 @@ public enum HttpStatusCode {
         SUCCESSFUL(2),
         REDIRECTION(3),
         CLIENT_ERROR(4),
-        SERVER_ERROR(5),
-        UNAUTHORIZED_ACTION(6),;
-
+        SERVER_ERROR(5);
 
         private final int value;
 
