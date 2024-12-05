@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "Error_Codes")
@@ -24,22 +24,16 @@ public class ErrorCode {
     private String errorMessage;
 
     @Column(name = "CreatedDate", unique = true)
-    private Date createdDate;
+    private LocalDate createdDate;
 
     @Column(name = "ModifiedDate")
-    private Date modifiedDate;
+    private LocalDate modifiedDate;
 
     @Column(name = "ErrorType")
     private String errorType;
 
     @Column(name = "HttpCode")
     private String httpCode;
-
-    public ErrorCode(String errorCode, String errorMessage, String httpCode) {
-        this.errorCode = errorCode;
-        this.errorMessage = errorMessage;
-        this.httpCode = httpCode;
-    }
 
     public ErrorCode() {
 
