@@ -16,8 +16,12 @@ public class UserControllerImpl implements UserController {
         this.userService = userService;
     }
 
-    public ResponseEntity<ResponseBody<String>> createNewUserByUsername(UserDTO registerRequest) {
-        return ResponseEntity.status(HttpStatusCodeEnum.OK.value).body(userService.createNewUserByUsername(registerRequest));
+    public ResponseEntity<ResponseBody<String>> createNewUserByPhoneNumber(UserDTO registerRequest) {
+        return ResponseEntity.status(HttpStatusCodeEnum.OK.value).body(userService.createNewUserByPhoneNumber(registerRequest));
+    }
+
+    public ResponseEntity<ResponseBody<String>> createNewUserByEmail(UserDTO registerRequest) {
+        return ResponseEntity.status(HttpStatusCodeEnum.OK.value).body(userService.createNewUserByEmail());
     }
 
     public ResponseEntity<ResponseBody<String>> login(UserDTO loginRequest) {
