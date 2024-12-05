@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "Users")
@@ -14,31 +14,43 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "UserID")
+    @Column(name = "user_id")
     private int userId;
 
-    @Column(name = "Username", nullable = false, unique = true)
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
 
-    @Column(name = "Password", nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "Email", unique = true)
+    @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "Dob")
-    private Date dob;
+    @Column(name = "dob")
 
-    @Column(name = "CreatedDate")
-    private Date createdDate;
+    private LocalDate dob;
 
-    @Column(name = "ReferredCode")
+    @Column(name = "created_date")
+    private LocalDate createdDate;
+
+    @Column(name = "referred_code")
     private String referredCode;
+
+    @Column(name = "phone_num")
+    private String phoneNumber;
 
     public User(String username, String password, String email) {
         this.username = username;
         this.password = password;
         this.email = email;
+    }
+
+    public User(String username, String password, String phoneNumber, LocalDate dob, LocalDate createdDate) {
+        this.username = username;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+        this.dob = dob;
+        this.createdDate = createdDate;
     }
 
     public User() {

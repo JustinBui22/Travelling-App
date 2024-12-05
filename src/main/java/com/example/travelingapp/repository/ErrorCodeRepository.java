@@ -7,8 +7,8 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ErrorRepository extends JpaRepository<ErrorCode, Long> {
+public interface ErrorCodeRepository extends JpaRepository<ErrorCode, Long> {
 
-    Optional<ErrorCode> findByErrorCode(String username);
-    boolean existsByErrorCode(String errorCode);
+    Optional<ErrorCode> findByErrorCode(String errorCode);
+    Optional<ErrorCode> findByHttpCode(String httpStatus);
 }
