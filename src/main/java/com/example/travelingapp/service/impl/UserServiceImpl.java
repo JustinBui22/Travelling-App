@@ -1,13 +1,16 @@
 package com.example.travelingapp.service.impl;
 
 import com.example.travelingapp.entity.ErrorCode;
+import com.example.travelingapp.entity.Sms;
 import com.example.travelingapp.entity.User;
 import com.example.travelingapp.enums.ErrorCodeEnum;
+import com.example.travelingapp.enums.SmsEnum;
 import com.example.travelingapp.repository.ConfigurationRepository;
 import com.example.travelingapp.repository.ErrorCodeRepository;
+import com.example.travelingapp.repository.SmsRepository;
 import com.example.travelingapp.service.UserService;
 import com.example.travelingapp.dto.UserDTO;
-import com.example.travelingapp.util.DataEncrypt;
+import com.example.travelingapp.security.DataSecurity;
 import com.example.travelingapp.util.ResponseBody;
 import lombok.extern.log4j.Log4j2;
 import com.example.travelingapp.repository.UserRepository;
@@ -18,10 +21,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import static com.example.travelingapp.enums.Enum.*;
+import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
 import static com.example.travelingapp.util.DateTimeFormatter.toLocalDate;
-import static com.example.travelingapp.util.Validator.*;
+import static com.example.travelingapp.Validator.Validator.*;
 
 @Service
 @Log4j2
@@ -29,21 +32,25 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ErrorCodeRepository errorCodeRepository;
     private final ConfigurationRepository configurationRepository;
-    private final DataEncrypt dataEncrypt = new DataEncrypt();
+    private final SmsRepository smsRepository;
+    private final DataSecurity dataSecurity = new DataSecurity();
+    private final SmsServiceImpl smsService;
 
 
-    public UserServiceImpl(UserRepository userRepository, ErrorCodeRepository errorCodeRepository, ConfigurationRepository configurationRepository) {
+    public UserServiceImpl(UserRepository userRepository, ErrorCodeRepository errorCodeRepository, ConfigurationRepository configurationRepository, SmsRepository smsRepository, SmsServiceImpl smsService) {
         this.userRepository = userRepository;
         this.errorCodeRepository = errorCodeRepository;
         this.configurationRepository = configurationRepository;
+        this.smsRepository = smsRepository;
 
+        this.smsService = smsService;
     }
 
     @Override
     public ResponseBody<String> createNewUserByPhoneNumber(UserDTO registerRequest) {
         String errorCode;
-        String message;
         String httpStatusCode;
+        String message;
         Optional<User> user = userRepository.findByUsername(registerRequest.getUsername());
 
         try {
@@ -67,15 +74,26 @@ public class UserServiceImpl implements UserService {
                 errorCode = resolveErrorCode(PASSWORD_NOT_QUALIFIED);
             }
             // Check if the phone number has a correct format
-            else if (!validatePhoneForm(registerRequest.getPhoneNumber(), configurationRepository.findByConfigCode(PASSWORD_PATTERN.name()))) {
+            else if (!validatePhoneForm(registerRequest.getPhoneNumber(), configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()))) {
                 log.info("Phone format is invalid");
                 errorCode = resolveErrorCode(PHONE_FORMAT_INVALID);
             } else {
-                User newUser = new User(registerRequest.getUsername(), dataEncrypt.encryptData(registerRequest.getPassword()),
-                        registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now());
-                userRepository.save(newUser);
-                log.info("User has been created!");
-                errorCode = resolveErrorCode(USER_CREATED);
+                // Get sms config for sms otp verification
+                Optional<Sms> registerSmsOptional = smsRepository.findBySmsCodeAndSmsFlow(SmsEnum.SMS_OTP_REGISTER.getCode(), Register.name());
+                if (registerSmsOptional.isPresent()) {
+                    String registerMessage = registerSmsOptional.get().getSmsContent();
+                    log.info("Start sending sms {} for otp verification in {} flow !", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
+                    smsService.sendSms(registerRequest.getPhoneNumber(), registerMessage);
+
+                    User newUser = new User(registerRequest.getUsername(), dataSecurity.encryptData(registerRequest.getPassword()),
+                            registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now());
+                    userRepository.save(newUser);
+                    log.info("User has been created!");
+                    errorCode = resolveErrorCode(USER_CREATED);
+                } else {
+                    log.info("There is no config for sms {} for {} flow!", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
+                    errorCode = resolveErrorCode(SMS_NOT_CONFIG);
+                }
             }
             httpStatusCode = String.valueOf(getHttpFromErrorCode(errorCode));
             message = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorMessage() : UNDEFINED_ERROR_CODE.getMessage();
@@ -92,22 +110,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseBody<String> login(String username, String password) {
-        String responseCode;
-        String message;
-        Optional<User> user = userRepository.findByUsername(username);
-        if (user.isEmpty()) {
-            log.info("User not found");
-            responseCode = USER_NOT_FOUND.getCode();
-        }
-//        if (user.isPresent() && !user.get().getPassword().equals(password)) {
-//            log.info("Password is not correct");
-//            responseCode = HttpStatusCode.UNAUTHORIZED.value();
-//        } else {
-//            log.info("Login successfully!");
-//            responseCode = HttpStatusCode.ACCEPTED.value();
-//        }
-//        message = HttpStatusCode.valueOf(responseCode).getReasonPhrase();
-//        return new ResponseBody<>(responseCode, message, "Login");
+
         return null;
     }
 
