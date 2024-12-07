@@ -16,6 +16,7 @@ public enum HttpStatusCodeEnum {
     UNDEFINED_ERROR_CODE(607, Series.ERROR, "Undefined error code"),
     UNDEFINED_HTTP_CODE(608, Series.ERROR, "Undefined http status code"),
     USER_CREATED(609, Series.SUCCESSFUL, "User created successfully"),
+    CONFIG_NOT_FOUND(610, Series.ERROR, "Config in database not found"),
 
 
     CONTINUE(100, HttpStatusCodeEnum.Series.INFORMATIONAL, "Continue"),

@@ -1,22 +1,22 @@
-package com.example.travelingapp.util;
+package com.example.travelingapp.security;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class DataEncrypt {
+public class DataSecurity {
     public String password;
 
     public enum encryptionAlgorithm {
 
     }
 
-    public DataEncrypt(String password, String encryptionAlgorithm) {
+    public DataSecurity(String password, String encryptionAlgorithm) {
         this.password = password;
     }
 
-    public DataEncrypt() {
+    public DataSecurity() {
     }
 
     public String encryptData(String password) {

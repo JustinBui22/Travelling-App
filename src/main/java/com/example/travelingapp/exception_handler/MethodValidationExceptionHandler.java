@@ -1,7 +1,8 @@
-package com.example.travelingapp.util;
+package com.example.travelingapp.exception_handler;
 
 import com.example.travelingapp.entity.ErrorCode;
 import com.example.travelingapp.repository.ErrorCodeRepository;
+import com.example.travelingapp.util.ResponseBody;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,11 +14,11 @@ import static com.example.travelingapp.enums.ErrorCodeEnum.INVALID_INPUT;
 import static com.example.travelingapp.enums.ErrorCodeEnum.UNDEFINED_ERROR_CODE;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class MethodValidationExceptionHandler {
 
     private final ErrorCodeRepository errorCodeRepository;
 
-    public GlobalExceptionHandler(ErrorCodeRepository errorCodeRepository) {
+    public MethodValidationExceptionHandler(ErrorCodeRepository errorCodeRepository) {
         this.errorCodeRepository = errorCodeRepository;
     }
 
