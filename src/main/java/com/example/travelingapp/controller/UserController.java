@@ -1,5 +1,6 @@
 package com.example.travelingapp.controller;
 
+import com.example.travelingapp.dto.LoginDTO;
 import com.example.travelingapp.dto.UserDTO;
 import com.example.travelingapp.util.ResponseBody;
 import jakarta.validation.Valid;
@@ -15,5 +16,5 @@ public interface UserController {
     ResponseEntity<ResponseBody<Object>> createNewUserByEmail(@Valid @RequestBody UserDTO registerRequest);
 
     @PostMapping("/login")
-    ResponseEntity<ResponseBody<Object>> login(@Valid @RequestBody UserDTO loginRequest);
+    ResponseEntity<ResponseBody<Object>> login(@Valid @RequestBody LoginDTO loginRequest);
 }
