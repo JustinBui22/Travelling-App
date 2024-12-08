@@ -4,6 +4,7 @@ import com.example.travelingapp.entity.ErrorCode;
 import com.example.travelingapp.entity.Sms;
 import com.example.travelingapp.entity.User;
 import com.example.travelingapp.enums.ErrorCodeEnum;
+import com.example.travelingapp.enums.HttpStatusCodeEnum;
 import com.example.travelingapp.enums.SmsEnum;
 import com.example.travelingapp.repository.ConfigurationRepository;
 import com.example.travelingapp.repository.ErrorCodeRepository;
@@ -11,6 +12,7 @@ import com.example.travelingapp.repository.SmsRepository;
 import com.example.travelingapp.service.UserService;
 import com.example.travelingapp.dto.UserDTO;
 import com.example.travelingapp.security.DataAesAlgorithm;
+import com.example.travelingapp.util.CompleteResponse;
 import com.example.travelingapp.util.ResponseBody;
 import lombok.extern.log4j.Log4j2;
 import com.example.travelingapp.repository.UserRepository;
@@ -46,15 +48,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseBody<String> createNewUserByPhoneNumber(UserDTO registerRequest) {
+    public CompleteResponse<Object> createNewUserByPhoneNumber(UserDTO registerRequest) {
         String errorCode;
-        String httpStatusCode;
-        String message;
+        HttpStatusCodeEnum httpStatusCode;
+        String errorMessage;
+        String errorDescription;
         Optional<User> user = userRepository.findByUsername(registerRequest.getUsername());
 
         try {
+            if (!validateUsername(registerRequest.getUsername(), configurationRepository.findByConfigCode(USERNAME_PATTERN.name()))) {
+                log.info("Username format is invalid!");
+                errorCode = resolveErrorCode(USERNAME_FORMAT_INVALID);
+            }
             // Check if username is taken
-            if (user.isPresent()) {
+            else if (user.isPresent()) {
                 log.info("Username {} is already taken!", user.get().getUsername());
                 errorCode = resolveErrorCode(USERNAME_TAKEN);
             }
@@ -94,21 +101,22 @@ public class UserServiceImpl implements UserService {
                     errorCode = resolveErrorCode(SMS_NOT_CONFIG);
                 }
             }
-            httpStatusCode = String.valueOf(getHttpFromErrorCode(errorCode));
-            message = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorMessage() : UNDEFINED_ERROR_CODE.getMessage();
-            return new ResponseBody<>(errorCode, message, Register.name(), !httpStatusCode.isEmpty() ? httpStatusCode : String.valueOf(UNDEFINED_HTTP_CODE));
+            httpStatusCode = getHttpFromErrorCode(errorCode);
+            errorMessage = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorMessage() : UNDEFINED_ERROR_CODE.getMessage();
+            errorDescription = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorDescription() : null;
+            return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, Register.name(), errorDescription), httpStatusCode.value());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public ResponseBody<String> createNewUserByEmail() {
+    public CompleteResponse<Object> createNewUserByEmail(UserDTO registerRequest) {
         return null;
     }
 
     @Override
-    public ResponseBody<String> login(String username, String password) {
+    public CompleteResponse<Object> login(UserDTO registerRequest) {
 
         return null;
     }

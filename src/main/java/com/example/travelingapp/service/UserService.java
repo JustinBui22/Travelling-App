@@ -1,11 +1,11 @@
 package com.example.travelingapp.service;
 
 import com.example.travelingapp.dto.UserDTO;
-import com.example.travelingapp.util.ResponseBody;
+import com.example.travelingapp.util.CompleteResponse;
 
 public interface UserService {
-    ResponseBody<String> createNewUserByPhoneNumber(UserDTO registerRequest);
-    ResponseBody<String> createNewUserByEmail();
+    CompleteResponse<Object> createNewUserByPhoneNumber(UserDTO registerRequest);
+    CompleteResponse<Object> createNewUserByEmail(UserDTO registerRequest);
 
-    ResponseBody<String> login(String username, String password);
+    CompleteResponse<Object> login(UserDTO registerRequest);
 }
