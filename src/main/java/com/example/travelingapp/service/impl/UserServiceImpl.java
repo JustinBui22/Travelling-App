@@ -1,5 +1,6 @@
 package com.example.travelingapp.service.impl;
 
+import com.example.travelingapp.dto.LoginDTO;
 import com.example.travelingapp.entity.ErrorCode;
 import com.example.travelingapp.entity.Sms;
 import com.example.travelingapp.entity.User;
@@ -116,41 +117,57 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CompleteResponse<Object> login(UserDTO loginRequest) {
+    public CompleteResponse<Object> login(LoginDTO loginRequest) {
+        String username = loginRequest.getUsername();
+        String password = loginRequest.getPassword();
         String errorCode;
-        String httpStatusCode;
-        String message;
+        HttpStatusCodeEnum httpStatusCode;
+        String errorMessage = UNDEFINED_ERROR_CODE.getMessage();
+        String errorDescription = null;
 
         try {
-//            // Validate if the username is a phone number
-//            boolean isPhoneNumber = validatePhoneForm(username, configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()));
-//
-//            // Retrieve the user based on username type (phone number or normal username)
-//            Optional<User> user = isPhoneNumber ? userRepository.findByPhoneNumber(username) : userRepository.findByUsername(username);
-//
-//            // If user is not found
-//            if (user.isEmpty()) {
-//                log.info("Invalid username or password!");
-//                errorCode = resolveErrorCode(USERNAME_PASSWORD_NOT_CORRECT);
-//            } else {
-//                User foundUser = user.get();
-//
-//                // Verify the password
-//                if (!password.equals(foundUser.getPassword())) {
-//                    log.info("Invalid username or password!");
-//                    errorCode = resolveErrorCode(USERNAME_PASSWORD_NOT_CORRECT);
-//                } else {
-//                    log.info("User logged in successfully!");
-//                    errorCode = resolveErrorCode(LOGIN_SUCCESS);
-//                }
-//            }
-//
-//            // Prepare the response
-//            httpStatusCode = String.valueOf(getHttpFromErrorCode(errorCode));
-//            message = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorMessage() : UNDEFINED_ERROR_CODE.getMessage();
-//
-//            return new ResponseBody<>(errorCode, message, Login.name(), !httpStatusCode.isEmpty() ? httpStatusCode : String.valueOf(UNDEFINED_HTTP_CODE));
-            return null;
+            // Validate if the username is a phone number
+            boolean isPhoneNumber = validatePhoneForm(
+                    username,
+                    configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name())
+            );
+
+            // Retrieve the user based on username type (phone number or normal username)
+            Optional<User> user = isPhoneNumber ?
+                    userRepository.findByPhoneNumber(username) :
+                    userRepository.findByUsername(username);
+
+            // Handle user not found
+            if (user.isEmpty()) {
+                log.info("Username not found!");
+                errorCode = resolveErrorCode(USER_NOT_FOUND);
+            } else {
+                User foundUser = user.get();
+
+                // Verify the password
+                if (!password.equals(foundUser.getPassword())) {
+                    log.info("Password incorrect!");
+                    errorCode = resolveErrorCode(PASSWORD_NOT_CORRECT);
+                } else {
+                    log.info("User logged in successfully!");
+                    errorCode = resolveErrorCode(LOGIN_SUCCESS);
+                }
+            }
+
+            // Resolve HTTP status and error details
+            httpStatusCode = getHttpFromErrorCode(errorCode);
+            Optional<ErrorCode> resolvedErrorCode = errorCodeRepository.findByErrorCode(errorCode);
+
+            if (resolvedErrorCode.isPresent()) {
+                ErrorCode error = resolvedErrorCode.get();
+                errorMessage = error.getErrorMessage();
+                errorDescription = error.getErrorDescription();
+            }
+            // Prepare and return the response
+            return new CompleteResponse<>(
+                    new ResponseBody<>(errorCode, errorMessage, Login.name(), errorDescription),
+                    httpStatusCode.value()
+            );
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

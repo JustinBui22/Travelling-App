@@ -13,16 +13,16 @@ public enum ErrorCodeEnum {
     USERNAME_TAKEN("E002", "Username taken", Register, HttpStatusCodeEnum.USERNAME_TAKEN),
     EMAIL_TAKEN("E003", "Email taken", Register, HttpStatusCodeEnum.EMAIL_TAKEN),
     PASSWORD_NOT_QUALIFIED("E004", "Password not qualified", Register, HttpStatusCodeEnum.PASSWORD_NOT_QUALIFIED),
-    USER_NOT_FOUND("E005", "User not found", Register, HttpStatusCodeEnum.USER_NOT_FOUND),
+    USER_NOT_FOUND("E005", "User not found", Login, HttpStatusCodeEnum.USER_NOT_FOUND),
     CLIENT_SERVER_ERROR("E006", "Client internal server error", Register, HttpStatusCodeEnum.CLIENT_SERVER_ERROR),
-    PASSWORD_NOT_CORRECT("E007", "Password not correct", Register, HttpStatusCodeEnum.PASSWORD_NOT_CORRECT),
+    PASSWORD_NOT_CORRECT("E007", "Password not correct", Login, HttpStatusCodeEnum.PASSWORD_NOT_CORRECT),
     UNDEFINED_ERROR_CODE("E008", "Undefined error code", Register, HttpStatusCodeEnum.UNDEFINED_ERROR_CODE),
     UNDEFINED_HTTP_CODE("E009", "Undefined http status code", Register, HttpStatusCodeEnum.UNDEFINED_HTTP_CODE),
     EMAIL_PATTERN_INVALID("E010", "Email form is invalid", Register, HttpStatusCodeEnum.EMAIL_PATTERN_INVALID),
     PHONE_FORMAT_INVALID("E011", "Phone format is invalid", Register, HttpStatusCodeEnum.PHONE_FORMAT_INVALID),
     SMS_NOT_CONFIG("E012", "Sms config is not found", Common, HttpStatusCodeEnum.CONFIG_NOT_FOUND),
-    LOGIN_SUCCESS("E012", "Log in successfully", Login, HttpStatusCodeEnum.LOGIN_SUCCESS),
-    USERNAME_FORMAT_INVALID("E013", "Username format invalid", Register, HttpStatusCodeEnum.USERNAME_FORMAT_INVALID);
+    USERNAME_FORMAT_INVALID("E013", "Username format invalid", Register, HttpStatusCodeEnum.USERNAME_FORMAT_INVALID),
+    LOGIN_SUCCESS("E014", "Log in successfully", Login, HttpStatusCodeEnum.LOGIN_SUCCESS);
 
     private final String code;
     private final String message;
