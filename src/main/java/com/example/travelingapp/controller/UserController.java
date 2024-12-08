@@ -15,5 +15,5 @@ public interface UserController {
     ResponseEntity<ResponseBody<Object>> createNewUserByEmail(@Valid @RequestBody UserDTO registerRequest);
 
     @PostMapping("/login")
-    ResponseEntity<ResponseBody<Object>> login(@RequestBody UserDTO loginRequest);
+    ResponseEntity<ResponseBody<Object>> login(@Valid @RequestBody UserDTO loginRequest);
 }
