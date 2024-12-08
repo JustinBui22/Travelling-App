@@ -6,6 +6,7 @@ import com.example.travelingapp.dto.UserDTO;
 import com.example.travelingapp.util.ResponseBody;
 import org.springframework.http.ResponseEntity;
 import com.example.travelingapp.service.UserService;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -24,7 +25,7 @@ public class UserControllerImpl implements UserController {
         return ResponseEntity.status(HttpStatusCodeEnum.OK.value).body(userService.createNewUserByEmail());
     }
 
-    public ResponseEntity<ResponseBody<String>> login(UserDTO loginRequest) {
+    public ResponseEntity<ResponseBody<String>> login(@RequestBody UserDTO loginRequest) {
         return ResponseEntity.status(HttpStatusCodeEnum.OK.value).body(userService.login(loginRequest.getUsername(), loginRequest.getPassword()));
     }
 }

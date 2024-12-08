@@ -18,6 +18,7 @@ import com.example.travelingapp.repository.UserRepository;
 import java.time.LocalDate;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.View;
 
 import java.util.Optional;
 
@@ -35,15 +36,17 @@ public class UserServiceImpl implements UserService {
     private final SmsRepository smsRepository;
     private final DataSecurity dataSecurity = new DataSecurity();
     private final SmsServiceImpl smsService;
+    private final View error;
 
 
-    public UserServiceImpl(UserRepository userRepository, ErrorCodeRepository errorCodeRepository, ConfigurationRepository configurationRepository, SmsRepository smsRepository, SmsServiceImpl smsService) {
+    public UserServiceImpl(UserRepository userRepository, ErrorCodeRepository errorCodeRepository, ConfigurationRepository configurationRepository, SmsRepository smsRepository, SmsServiceImpl smsService, View error) {
         this.userRepository = userRepository;
         this.errorCodeRepository = errorCodeRepository;
         this.configurationRepository = configurationRepository;
         this.smsRepository = smsRepository;
 
         this.smsService = smsService;
+        this.error = error;
     }
 
     @Override
@@ -110,9 +113,44 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseBody<String> login(String username, String password) {
+        String errorCode;
+        String httpStatusCode;
+        String message;
 
-        return null;
+        try {
+            // Validate if the username is a phone number
+            boolean isPhoneNumber = validatePhoneForm(username, configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()));
+
+            // Retrieve the user based on username type (phone number or normal username)
+            Optional<User> user = isPhoneNumber ? userRepository.findByPhoneNumber(username) : userRepository.findByUsername(username);
+
+            // If user is not found
+            if (user.isEmpty()) {
+                log.info("Invalid username or password!");
+                errorCode = resolveErrorCode(USERNAME_PASSWORD_NOT_CORRECT);
+            } else {
+                User foundUser = user.get();
+
+                // Verify the password
+                if (!password.equals(foundUser.getPassword())) {
+                    log.info("Invalid username or password!");
+                    errorCode = resolveErrorCode(USERNAME_PASSWORD_NOT_CORRECT);
+                } else {
+                    log.info("User logged in successfully!");
+                    errorCode = resolveErrorCode(LOGIN_SUCCESS);
+                }
+            }
+
+            // Prepare the response
+            httpStatusCode = String.valueOf(getHttpFromErrorCode(errorCode));
+            message = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorMessage() : UNDEFINED_ERROR_CODE.getMessage();
+
+            return new ResponseBody<>(errorCode, message, Login.name(), !httpStatusCode.isEmpty() ? httpStatusCode : String.valueOf(UNDEFINED_HTTP_CODE));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
+
 
     private String resolveErrorCode(ErrorCodeEnum errorCodeEnum) {
         Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByHttpCode(String.valueOf(errorCodeEnum));

@@ -12,11 +12,12 @@ public enum HttpStatusCodeEnum {
     PASSWORD_NOT_QUALIFIED(603, Series.BAD_REQUEST, "Password not qualified"),
     USER_NOT_FOUND(604, Series.ERROR, "User not found"),
     CLIENT_SERVER_ERROR(605, Series.ERROR, "Client internal server error"),
-    PASSWORD_NOT_CORRECT(606, Series.ERROR, "Password not correct"),
+    USERNAME_PASSWORD_NOT_CORRECT(606, Series.ERROR, "Username or Password is not correct"),
     UNDEFINED_ERROR_CODE(607, Series.ERROR, "Undefined error code"),
     UNDEFINED_HTTP_CODE(608, Series.ERROR, "Undefined http status code"),
     USER_CREATED(609, Series.SUCCESSFUL, "User created successfully"),
     CONFIG_NOT_FOUND(610, Series.ERROR, "Config in database not found"),
+    LOGIN_SUCCESS(611, Series.SUCCESSFUL, "Login successful"),
 
 
     CONTINUE(100, HttpStatusCodeEnum.Series.INFORMATIONAL, "Continue"),
