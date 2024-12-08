@@ -5,18 +5,18 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class DataSecurity {
+public class DataAesAlgorithm {
     public String password;
 
     public enum encryptionAlgorithm {
 
     }
 
-    public DataSecurity(String password, String encryptionAlgorithm) {
+    public DataAesAlgorithm(String password, String encryptionAlgorithm) {
         this.password = password;
     }
 
-    public DataSecurity() {
+    public DataAesAlgorithm() {
     }
 
     public String encryptData(String password) {

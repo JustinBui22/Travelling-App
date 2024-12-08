@@ -10,7 +10,7 @@ import com.example.travelingapp.repository.ErrorCodeRepository;
 import com.example.travelingapp.repository.SmsRepository;
 import com.example.travelingapp.service.UserService;
 import com.example.travelingapp.dto.UserDTO;
-import com.example.travelingapp.security.DataSecurity;
+import com.example.travelingapp.security.DataAesAlgorithm;
 import com.example.travelingapp.util.ResponseBody;
 import lombok.extern.log4j.Log4j2;
 import com.example.travelingapp.repository.UserRepository;
@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
     private final ErrorCodeRepository errorCodeRepository;
     private final ConfigurationRepository configurationRepository;
     private final SmsRepository smsRepository;
-    private final DataSecurity dataSecurity = new DataSecurity();
+    private final DataAesAlgorithm dataAesAlgorithm = new DataAesAlgorithm();
     private final SmsServiceImpl smsService;
 
 
@@ -42,7 +42,6 @@ public class UserServiceImpl implements UserService {
         this.errorCodeRepository = errorCodeRepository;
         this.configurationRepository = configurationRepository;
         this.smsRepository = smsRepository;
-
         this.smsService = smsService;
     }
 
@@ -85,7 +84,7 @@ public class UserServiceImpl implements UserService {
                     log.info("Start sending sms {} for otp verification in {} flow !", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
                     smsService.sendSms(registerRequest.getPhoneNumber(), registerMessage);
 
-                    User newUser = new User(registerRequest.getUsername(), dataSecurity.encryptData(registerRequest.getPassword()),
+                    User newUser = new User(registerRequest.getUsername(), dataAesAlgorithm.encryptData(registerRequest.getPassword()),
                             registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now());
                     userRepository.save(newUser);
                     log.info("User has been created!");
