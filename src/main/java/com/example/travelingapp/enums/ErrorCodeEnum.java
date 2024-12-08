@@ -21,8 +21,8 @@ public enum ErrorCodeEnum {
     EMAIL_PATTERN_INVALID("E010", "Email form is invalid", Register, HttpStatusCodeEnum.EMAIL_PATTERN_INVALID),
     PHONE_FORMAT_INVALID("E011", "Phone format is invalid", Register, HttpStatusCodeEnum.PHONE_FORMAT_INVALID),
     SMS_NOT_CONFIG("E012", "Sms config is not found", Common, HttpStatusCodeEnum.CONFIG_NOT_FOUND),
-    USERNAME_FORMAT_INVALID("E013", "Username format invalid", Register, HttpStatusCodeEnum.USERNAME_FORMAT_INVALID),
-    LOGIN_SUCCESS("E012", "Log in successfully", Login, HttpStatusCodeEnum.LOGIN_SUCCESS);
+    LOGIN_SUCCESS("E012", "Log in successfully", Login, HttpStatusCodeEnum.LOGIN_SUCCESS),
+    USERNAME_FORMAT_INVALID("E013", "Username format invalid", Register, HttpStatusCodeEnum.USERNAME_FORMAT_INVALID);
 
     private final String code;
     private final String message;

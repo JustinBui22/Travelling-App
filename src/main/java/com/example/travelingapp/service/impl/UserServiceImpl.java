@@ -156,7 +156,6 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-
     private String resolveErrorCode(ErrorCodeEnum errorCodeEnum) {
         Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByHttpCode(String.valueOf(errorCodeEnum));
         return errorCodeOptional.map(ErrorCode::getErrorCode)
