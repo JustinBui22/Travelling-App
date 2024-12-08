@@ -1,6 +1,7 @@
 package com.example.travelingapp.controller.impl;
 
 import com.example.travelingapp.controller.UserController;
+import com.example.travelingapp.dto.LoginDTO;
 import com.example.travelingapp.dto.UserDTO;
 import com.example.travelingapp.util.CompleteResponse;
 import com.example.travelingapp.util.ResponseBody;
@@ -28,7 +29,7 @@ public class UserControllerImpl implements UserController {
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
     }
 
-    public ResponseEntity<ResponseBody<Object>> login(UserDTO loginRequest) {
+    public ResponseEntity<ResponseBody<Object>> login(LoginDTO loginRequest) {
         CompleteResponse<Object> response = userService.login(loginRequest);
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
     }
