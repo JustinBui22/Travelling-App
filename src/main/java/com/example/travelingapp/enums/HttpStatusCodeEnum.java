@@ -1,7 +1,6 @@
 package com.example.travelingapp.enums;
 
 import lombok.Getter;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.lang.Nullable;
 
 public enum HttpStatusCodeEnum {
@@ -19,6 +18,7 @@ public enum HttpStatusCodeEnum {
     USER_CREATED(609, Series.SUCCESSFUL, "User created successfully"),
     CONFIG_NOT_FOUND(610, Series.ERROR, "Config in database not found"),
     USERNAME_FORMAT_INVALID(611, Series.BAD_REQUEST, "Username format invalid"),
+    LOGIN_SUCCESS(612, Series.SUCCESSFUL, "Login successful"),
 
 
     CONTINUE(100, HttpStatusCodeEnum.Series.INFORMATIONAL, "Continue"),
