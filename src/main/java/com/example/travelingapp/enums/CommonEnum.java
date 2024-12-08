@@ -11,7 +11,8 @@ public enum CommonEnum {
 
     PASSWORD_PATTERN(Group.Config),
     EMAIL_PATTERN(Group.Config),
-    PHONE_VN_PATTERN(Group.Config);
+    PHONE_VN_PATTERN(Group.Config),
+    USERNAME_PATTERN(Group.Config),;
 
 
     private final Group group;

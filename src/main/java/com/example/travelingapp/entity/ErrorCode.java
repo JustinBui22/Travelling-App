@@ -14,25 +14,28 @@ public class ErrorCode {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ErrorId")
+    @Column(name = "errorId")
     private int errorId;
 
-    @Column(name = "ErrorCode", nullable = false, unique = true)
+    @Column(name = "error_code", nullable = false, unique = true)
     private String errorCode;
 
-    @Column(name = "ErrorMessage", nullable = false)
+    @Column(name = "error_message", nullable = false)
     private String errorMessage;
 
-    @Column(name = "CreatedDate", unique = true)
+    @Column(name = "error_description")
+    private String errorDescription;
+
+    @Column(name = "createdD_date", unique = true)
     private LocalDate createdDate;
 
-    @Column(name = "ModifiedDate")
+    @Column(name = "modified_date")
     private LocalDate modifiedDate;
 
-    @Column(name = "ErrorType")
+    @Column(name = "error_type")
     private String errorType;
 
-    @Column(name = "HttpCode")
+    @Column(name = "http_code")
     private String httpCode;
 
     public ErrorCode() {

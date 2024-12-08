@@ -36,4 +36,10 @@ public class Validator {
         String logMessage = "Config for phone number pattern in Vietnam not found";
         return validateInput(phone, phoneConfigEntity, backUpPhonePattern, logMessage);
     }
+
+    public static boolean validateUsername(String username, Optional<Configuration> usernameConfigEntity) {
+        String backUpUsernamePattern = "^(?!^(0|84|\\+84)(3|5|7|8|9)\\d{7,8}$)(?!.*[\\u0008\\t])[a-zA-Z0-9_.-]{5,20}$";
+        String logMessage = "Config for phone number pattern in Vietnam not found";
+        return validateInput(username, usernameConfigEntity, backUpUsernamePattern, logMessage);
+    }
 }
