@@ -8,4 +8,5 @@ public interface UserService {
     CompleteResponse<Object> createNewUserByPhoneNumber(UserDTO registerRequest);
     CompleteResponse<Object> createNewUserByEmail(UserDTO registerRequest);
     CompleteResponse<Object> login(LoginDTO loginRequest);
+    CompleteResponse<Object> test(String input);
 }

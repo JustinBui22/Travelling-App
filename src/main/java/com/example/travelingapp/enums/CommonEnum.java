@@ -12,7 +12,11 @@ public enum CommonEnum {
     PASSWORD_PATTERN(Group.Config),
     EMAIL_PATTERN(Group.Config),
     PHONE_VN_PATTERN(Group.Config),
-    USERNAME_PATTERN(Group.Config),;
+    USERNAME_PATTERN(Group.Config),
+
+    AES(Group.Algorithm),
+    RSA(Group.Algorithm),
+    ;
 
 
     private final Group group;
@@ -24,6 +28,6 @@ public enum CommonEnum {
     public enum Group {
         Flow,
         Config,
-        C
+        Algorithm
     }
 }

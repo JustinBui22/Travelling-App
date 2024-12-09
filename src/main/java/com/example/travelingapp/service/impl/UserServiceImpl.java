@@ -12,7 +12,6 @@ import com.example.travelingapp.repository.ErrorCodeRepository;
 import com.example.travelingapp.repository.SmsRepository;
 import com.example.travelingapp.service.UserService;
 import com.example.travelingapp.dto.UserDTO;
-import com.example.travelingapp.security.DataAesAlgorithm;
 import com.example.travelingapp.util.CompleteResponse;
 import com.example.travelingapp.util.ResponseBody;
 import lombok.extern.log4j.Log4j2;
@@ -26,6 +25,7 @@ import java.util.Optional;
 
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
+import static com.example.travelingapp.security.data_security.DataAesAlgorithm.encryptData;
 import static com.example.travelingapp.util.DateTimeFormatter.toLocalDate;
 import static com.example.travelingapp.Validator.Validator.*;
 
@@ -36,15 +36,16 @@ public class UserServiceImpl implements UserService {
     private final ErrorCodeRepository errorCodeRepository;
     private final ConfigurationRepository configurationRepository;
     private final SmsRepository smsRepository;
-    private final DataAesAlgorithm dataAesAlgorithm = new DataAesAlgorithm();
     private final SmsServiceImpl smsService;
-
 
     public UserServiceImpl(UserRepository userRepository, ErrorCodeRepository errorCodeRepository, ConfigurationRepository configurationRepository, SmsRepository smsRepository, SmsServiceImpl smsService) {
         this.userRepository = userRepository;
         this.errorCodeRepository = errorCodeRepository;
         this.configurationRepository = configurationRepository;
         this.smsRepository = smsRepository;
+
+
+
         this.smsService = smsService;
     }
 
@@ -92,7 +93,7 @@ public class UserServiceImpl implements UserService {
                     log.info("Start sending sms {} for otp verification in {} flow !", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
                     smsService.sendSms(registerRequest.getPhoneNumber(), registerMessage);
 
-                    User newUser = new User(registerRequest.getUsername(), dataAesAlgorithm.encryptData(registerRequest.getPassword()),
+                    User newUser = new User(registerRequest.getUsername(), encryptData(registerRequest.getPassword()),
                             registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now());
                     userRepository.save(newUser);
                     log.info("User has been created!");
@@ -107,6 +108,7 @@ public class UserServiceImpl implements UserService {
             errorDescription = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorDescription() : null;
             return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, Register.name(), errorDescription), httpStatusCode.value());
         } catch (Exception e) {
+            log.info("There has been an error in registering a new user!", e);
             throw new RuntimeException(e);
         }
     }
@@ -171,6 +173,12 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public CompleteResponse<Object> test(String input) {
+        return new CompleteResponse<>(new ResponseBody<>(null, null, null, encryptData(input)), HttpStatusCodeEnum.OK.value());
+
     }
 
     private String resolveErrorCode(ErrorCodeEnum errorCodeEnum) {
