@@ -33,6 +33,12 @@ public class UserControllerImpl implements UserController {
         CompleteResponse<Object> response = userService.login(loginRequest);
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
     }
+
+    @Override
+    public ResponseEntity<ResponseBody<Object>> test(String password) {
+        CompleteResponse<Object> response = userService.test(password);
+        return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
+    }
 }
 
 

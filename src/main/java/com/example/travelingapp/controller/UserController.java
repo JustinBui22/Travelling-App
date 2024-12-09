@@ -17,4 +17,7 @@ public interface UserController {
 
     @PostMapping("/login")
     ResponseEntity<ResponseBody<Object>> login(@Valid @RequestBody LoginDTO loginRequest);
+
+    @GetMapping("/test")
+    ResponseEntity<ResponseBody<Object>> test(@RequestParam String password);
 }
