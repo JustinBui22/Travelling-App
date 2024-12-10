@@ -29,9 +29,8 @@ public class DataAesAlgorithm {
             return keyGenerator.generateKey();
         } catch (NoSuchAlgorithmException e) {
             log.error("There is an error generating random key!", e);
+            throw new RuntimeException(e);
         }
-        log.info("Key generated unsuccessful!");
-        return null;
     }
 
     private static SecretKey generateKeyFromInput(String input) {
@@ -43,9 +42,8 @@ public class DataAesAlgorithm {
                     .getEncoded(), AES.name());
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             log.error("There is an error generating key from input!", e);
+            throw new RuntimeException(e);
         }
-        log.info("Key generated from input unsuccessful!");
-        return null;
     }
 
     private IvParameterSpec generateIV() {
@@ -61,9 +59,8 @@ public class DataAesAlgorithm {
             return new IvParameterSpec(iv);
         } catch (Exception e) {
             log.error("There is an error generating IV!", e);
+            throw new RuntimeException(e);
         }
-        log.info("IV random generated unsuccessful!");
-        return null;
     }
 
     private static IvParameterSpec generateIVFromInput(String input) {
@@ -85,9 +82,8 @@ public class DataAesAlgorithm {
             return new IvParameterSpec(iv);
         } catch (Exception e) {
             log.error("There is an error generating IV from input!", e);
+            throw new RuntimeException(e);
         }
-        log.info("IV generated from input unsuccessful!");
-        return null;
     }
 
     private String generateSalt() {
@@ -103,9 +99,8 @@ public class DataAesAlgorithm {
             return Base64.getEncoder().encodeToString(salt);
         } catch (Exception e) {
             log.error("There is an error generating salt!", e);
+            throw new RuntimeException(e);
         }
-        log.info("Salt generated unsuccessful!");
-        return null;
     }
 
     private static String generateSaltFromInput(String input) {
@@ -125,14 +120,13 @@ public class DataAesAlgorithm {
             return Base64.getEncoder().encodeToString(salt);
         } catch (Exception e) {
             log.error("There is an error generating salt from input!", e);
+            throw new RuntimeException(e);
         }
-        log.info("Salt generated from input unsuccessful!");
-        return null;
     }
 
     public static String encryptData(String input) {
         try {
-            log.info("Start encrypting data using {} algorithm", AES.name());
+            log.info("Start encrypting data using modified {} algorithm", AES.name());
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, generateKeyFromInput(input), generateIVFromInput(input
             ));
@@ -142,13 +136,12 @@ public class DataAesAlgorithm {
         } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidAlgorithmParameterException |
                  InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
             log.error("There is an error encrypting data!", e);
+            throw new RuntimeException(e);
         }
-        log.info("Data encryption unsuccessful!");
-        return null;
     }
 
     private String decryptData(String input, SecretKey key,
-                              IvParameterSpec iv) {
+                               IvParameterSpec iv) {
 
         try {
             log.info("Start decrypting data using {} algorithm", AES.name());
@@ -160,8 +153,21 @@ public class DataAesAlgorithm {
         } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidAlgorithmParameterException |
                  InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
             log.error("There is an error decrypting data!", e);
+            throw new RuntimeException(e);
         }
-        log.info("Data decryption unsuccessful!");
-        return null;
+    }
+
+    private String encryptData(String input, SecretKey key, IvParameterSpec iv) {
+        try {
+            log.info("Start encrypting data using {} algorithm", AES.name());
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+            byte[] encryptedText = cipher.doFinal(input.getBytes());
+            return Base64.getEncoder().encodeToString(encryptedText);
+        } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidAlgorithmParameterException |
+                 InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+            log.error("There is an error encrypting data!", e);
+            throw new RuntimeException(e);
+        }
     }
 }

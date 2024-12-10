@@ -45,7 +45,6 @@ public class UserServiceImpl implements UserService {
         this.smsRepository = smsRepository;
 
 
-
         this.smsService = smsService;
     }
 
@@ -104,8 +103,9 @@ public class UserServiceImpl implements UserService {
                 }
             }
             httpStatusCode = getHttpFromErrorCode(errorCode);
-            errorMessage = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorMessage() : UNDEFINED_ERROR_CODE.getMessage();
-            errorDescription = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorDescription() : null;
+            Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorCode(errorCode);
+            errorMessage = errorCodeOptional.map(ErrorCode::getErrorMessage).orElse(UNDEFINED_ERROR_CODE.getMessage());
+            errorDescription = errorCodeOptional.map(ErrorCode::getErrorDescription).orElse(null);
             return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, Register.name(), errorDescription), httpStatusCode.value());
         } catch (Exception e) {
             log.info("There has been an error in registering a new user!", e);
@@ -145,10 +145,10 @@ public class UserServiceImpl implements UserService {
                 errorCode = resolveErrorCode(USER_NOT_FOUND);
             } else {
                 // check if password matches and display correspond error code.
-                errorCode = dataAesAlgorithm.encryptData(password).equals(user.get().getPassword())
+                errorCode = encryptData(password).equals(user.get().getPassword())
                         ? resolveErrorCode(LOGIN_SUCCESS)
                         : resolveErrorCode(PASSWORD_NOT_CORRECT);
-                log.info(dataAesAlgorithm.encryptData(password).equals(user.get().getPassword())
+                log.info(encryptData(password).equals(user.get().getPassword())
                         ? "User logged in successfully!"
                         : "Password incorrect!");
 
