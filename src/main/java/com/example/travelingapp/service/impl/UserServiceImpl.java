@@ -122,53 +122,57 @@ public class UserServiceImpl implements UserService {
         String password = loginRequest.getPassword();
         String errorCode;
         HttpStatusCodeEnum httpStatusCode;
-        String errorMessage = UNDEFINED_ERROR_CODE.getMessage();
-        String errorDescription = null;
+        String errorMessage;
+        String errorDescription;
+
+        // Validate if the username is a phone number
+        boolean isPhoneNumber = validatePhoneForm(
+                username,
+                configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name())
+        );
+
+        // Retrieve the user based on username type (phone number or normal username)
+        Optional<User> user = isPhoneNumber ?
+                userRepository.findByPhoneNumber(loginRequest.getUsername()) :
+                userRepository.findByUsername(username);
 
         try {
-            // Validate if the username is a phone number
-            boolean isPhoneNumber = validatePhoneForm(
-                    username,
-                    configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name())
-            );
-
-            // Retrieve the user based on username type (phone number or normal username)
-            Optional<User> user = isPhoneNumber ?
-                    userRepository.findByPhoneNumber(username) :
-                    userRepository.findByUsername(username);
-
             // Handle user not found
             if (user.isEmpty()) {
                 log.info("Username not found!");
                 errorCode = resolveErrorCode(USER_NOT_FOUND);
             } else {
-                User foundUser = user.get();
+                // check if password matches and display correspond error code.
+                errorCode = dataAesAlgorithm.encryptData(password).equals(user.get().getPassword())
+                        ? resolveErrorCode(LOGIN_SUCCESS)
+                        : resolveErrorCode(PASSWORD_NOT_CORRECT);
+                log.info(dataAesAlgorithm.encryptData(password).equals(user.get().getPassword())
+                        ? "User logged in successfully!"
+                        : "Password incorrect!");
 
-                // Verify the password
-                if (!password.equals(foundUser.getPassword())) {
-                    log.info("Password incorrect!");
-                    errorCode = resolveErrorCode(PASSWORD_NOT_CORRECT);
-                } else {
-                    log.info("User logged in successfully!");
-                    errorCode = resolveErrorCode(LOGIN_SUCCESS);
-                }
+//                // Verify the password
+//                if (!dataAesAlgorithm.encryptData(loginRequest.getPassword()).equals(foundUser.getPassword())) {
+//                    log.info("Password incorrect!");
+//                    errorCode = resolveErrorCode(PASSWORD_NOT_CORRECT);
+//                } else {
+//                    log.info("User logged in successfully!");
+//                    errorCode = resolveErrorCode(LOGIN_SUCCESS);
+//                }
             }
 
             // Resolve HTTP status and error details
             httpStatusCode = getHttpFromErrorCode(errorCode);
-            Optional<ErrorCode> resolvedErrorCode = errorCodeRepository.findByErrorCode(errorCode);
 
-            if (resolvedErrorCode.isPresent()) {
-                ErrorCode error = resolvedErrorCode.get();
-                errorMessage = error.getErrorMessage();
-                errorDescription = error.getErrorDescription();
-            }
+            errorMessage = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorMessage() : UNDEFINED_ERROR_CODE.getMessage();
+            errorDescription = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorDescription() : null;
+
             // Prepare and return the response
             return new CompleteResponse<>(
                     new ResponseBody<>(errorCode, errorMessage, Login.name(), errorDescription),
                     httpStatusCode.value()
             );
         } catch (Exception e) {
+            log.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }
