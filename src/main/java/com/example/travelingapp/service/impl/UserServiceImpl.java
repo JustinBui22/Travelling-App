@@ -1,10 +1,8 @@
 package com.example.travelingapp.service.impl;
 
 import com.example.travelingapp.dto.LoginDTO;
-import com.example.travelingapp.entity.ErrorCode;
 import com.example.travelingapp.entity.Sms;
 import com.example.travelingapp.entity.User;
-import com.example.travelingapp.enums.ErrorCodeEnum;
 import com.example.travelingapp.enums.HttpStatusCodeEnum;
 import com.example.travelingapp.enums.SmsEnum;
 import com.example.travelingapp.repository.ConfigurationRepository;
@@ -26,89 +24,83 @@ import java.util.Optional;
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
 import static com.example.travelingapp.security.data_security.DataAesAlgorithm.encryptData;
-import static com.example.travelingapp.util.DateTimeFormatter.toLocalDate;
-import static com.example.travelingapp.Validator.Validator.*;
+import static com.example.travelingapp.util.CompleteResponse.getCompleteResponse;
+import static com.example.travelingapp.util.common.DateTimeFormatter.toLocalDate;
+import static com.example.travelingapp.Validator.InputValidator.*;
+import static com.example.travelingapp.util.common.ErrorCodeResolver.resolveErrorCode;
 
 @Service
 @Log4j2
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final ErrorCodeRepository errorCodeRepository;
     private final ConfigurationRepository configurationRepository;
     private final SmsRepository smsRepository;
-    private final SmsServiceImpl smsService;
+    private final SmsServiceImpl smsServiceImpl;
+    private final ErrorCodeRepository errorCodeRepository;
 
-    public UserServiceImpl(UserRepository userRepository, ErrorCodeRepository errorCodeRepository, ConfigurationRepository configurationRepository, SmsRepository smsRepository, SmsServiceImpl smsService) {
+
+    public UserServiceImpl(UserRepository userRepository, ConfigurationRepository configurationRepository, SmsRepository smsRepository, SmsServiceImpl smsServiceImpl, ErrorCodeRepository errorCodeRepository) {
         this.userRepository = userRepository;
-        this.errorCodeRepository = errorCodeRepository;
         this.configurationRepository = configurationRepository;
         this.smsRepository = smsRepository;
-
-
-        this.smsService = smsService;
+        this.smsServiceImpl = smsServiceImpl;
+        this.errorCodeRepository = errorCodeRepository;
     }
 
     @Override
     public CompleteResponse<Object> createNewUserByPhoneNumber(UserDTO registerRequest) {
         String errorCode;
-        HttpStatusCodeEnum httpStatusCode;
-        String errorMessage;
-        String errorDescription;
         Optional<User> user = userRepository.findByUsername(registerRequest.getUsername());
 
         try {
             if (!validateUsername(registerRequest.getUsername(), configurationRepository.findByConfigCode(USERNAME_PATTERN.name()))) {
                 log.info("Username format is invalid!");
-                errorCode = resolveErrorCode(USERNAME_FORMAT_INVALID);
+                errorCode = resolveErrorCode(errorCodeRepository, USERNAME_FORMAT_INVALID);
             }
             // Check if username is taken
             else if (user.isPresent()) {
                 log.info("Username {} is already taken!", user.get().getUsername());
-                errorCode = resolveErrorCode(USERNAME_TAKEN);
+                errorCode = resolveErrorCode(errorCodeRepository, USERNAME_TAKEN);
             }
             // Check if email is inputted and has valid form and if taken
             else if (!registerRequest.getEmail().isEmpty()
                     && !validateEmailForm(registerRequest.getEmail(), configurationRepository.findByConfigCode(EMAIL_PATTERN.name()))) {
                 log.info("Email format is invalid");
-                errorCode = resolveErrorCode(EMAIL_PATTERN_INVALID);
+                errorCode = resolveErrorCode(errorCodeRepository, EMAIL_PATTERN_INVALID);
             } else if (!registerRequest.getEmail().isEmpty() && userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
                 log.info("Email is already taken!");
-                errorCode = resolveErrorCode(EMAIL_TAKEN);
+                errorCode = resolveErrorCode(errorCodeRepository, EMAIL_TAKEN);
             }
             // Check if the password meets the security requirement
             else if (!validatePassword(registerRequest.getPassword(), configurationRepository.findByConfigCode(PASSWORD_PATTERN.name()))) {
                 log.info("Password created is weak!");
-                errorCode = resolveErrorCode(PASSWORD_NOT_QUALIFIED);
+                errorCode = resolveErrorCode(errorCodeRepository, PASSWORD_NOT_QUALIFIED);
             }
             // Check if the phone number has a correct format
             else if (!validatePhoneForm(registerRequest.getPhoneNumber(), configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()))) {
                 log.info("Phone format is invalid");
-                errorCode = resolveErrorCode(PHONE_FORMAT_INVALID);
+                errorCode = resolveErrorCode(errorCodeRepository, PHONE_FORMAT_INVALID);
             } else {
                 // Get sms config for sms otp verification
                 Optional<Sms> registerSmsOptional = smsRepository.findBySmsCodeAndSmsFlow(SmsEnum.SMS_OTP_REGISTER.getCode(), Register.name());
                 if (registerSmsOptional.isPresent()) {
                     String registerMessage = registerSmsOptional.get().getSmsContent();
                     log.info("Start sending sms {} for otp verification in {} flow !", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
-                    smsService.sendSms(registerRequest.getPhoneNumber(), registerMessage);
+                    smsServiceImpl.sendSms(registerRequest.getPhoneNumber(), registerMessage);
 
                     User newUser = new User(registerRequest.getUsername(), encryptData(registerRequest.getPassword()),
                             registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now());
                     userRepository.save(newUser);
                     log.info("User has been created!");
-                    errorCode = resolveErrorCode(USER_CREATED);
+                    errorCode = resolveErrorCode(errorCodeRepository, USER_CREATED);
                 } else {
                     log.info("There is no config for sms {} for {} flow!", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
-                    errorCode = resolveErrorCode(SMS_NOT_CONFIG);
+                    errorCode = resolveErrorCode(errorCodeRepository, SMS_NOT_CONFIG);
                 }
             }
-            httpStatusCode = getHttpFromErrorCode(errorCode);
-            Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorCode(errorCode);
-            errorMessage = errorCodeOptional.map(ErrorCode::getErrorMessage).orElse(UNDEFINED_ERROR_CODE.getMessage());
-            errorDescription = errorCodeOptional.map(ErrorCode::getErrorDescription).orElse(null);
-            return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, Register.name(), errorDescription), httpStatusCode.value());
+            return getCompleteResponse(errorCodeRepository, errorCode, Register.name());
         } catch (Exception e) {
-            log.info("There has been an error in registering a new user!", e);
+            log.error("There has been an error in registering a new user!", e);
             throw new RuntimeException(e);
         }
     }
@@ -123,58 +115,33 @@ public class UserServiceImpl implements UserService {
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
         String errorCode;
-        HttpStatusCodeEnum httpStatusCode;
-        String errorMessage;
-        String errorDescription;
 
         // Validate if the username is a phone number
         boolean isPhoneNumber = validatePhoneForm(
                 username,
                 configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name())
         );
-
         // Retrieve the user based on username type (phone number or normal username)
         Optional<User> user = isPhoneNumber ?
-                userRepository.findByPhoneNumber(loginRequest.getUsername()) :
+                userRepository.findByPhoneNumber(username) :
                 userRepository.findByUsername(username);
-
         try {
             // Handle user not found
             if (user.isEmpty()) {
                 log.info("Username not found!");
-                errorCode = resolveErrorCode(USER_NOT_FOUND);
+                errorCode = resolveErrorCode(errorCodeRepository, USER_NOT_FOUND);
             } else {
                 // check if password matches and display correspond error code.
                 errorCode = encryptData(password).equals(user.get().getPassword())
-                        ? resolveErrorCode(LOGIN_SUCCESS)
-                        : resolveErrorCode(PASSWORD_NOT_CORRECT);
+                        ? resolveErrorCode(errorCodeRepository, LOGIN_SUCCESS)
+                        : resolveErrorCode(errorCodeRepository, PASSWORD_NOT_CORRECT);
                 log.info(encryptData(password).equals(user.get().getPassword())
                         ? "User logged in successfully!"
                         : "Password incorrect!");
-
-//                // Verify the password
-//                if (!dataAesAlgorithm.encryptData(loginRequest.getPassword()).equals(foundUser.getPassword())) {
-//                    log.info("Password incorrect!");
-//                    errorCode = resolveErrorCode(PASSWORD_NOT_CORRECT);
-//                } else {
-//                    log.info("User logged in successfully!");
-//                    errorCode = resolveErrorCode(LOGIN_SUCCESS);
-//                }
             }
-
-            // Resolve HTTP status and error details
-            httpStatusCode = getHttpFromErrorCode(errorCode);
-
-            errorMessage = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorMessage() : UNDEFINED_ERROR_CODE.getMessage();
-            errorDescription = errorCodeRepository.findByErrorCode(errorCode).isPresent() ? errorCodeRepository.findByErrorCode(errorCode).get().getErrorDescription() : null;
-
-            // Prepare and return the response
-            return new CompleteResponse<>(
-                    new ResponseBody<>(errorCode, errorMessage, Login.name(), errorDescription),
-                    httpStatusCode.value()
-            );
+            return getCompleteResponse(errorCodeRepository, errorCode, Login.name());
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            log.error("There has been an error in logging in for user {}!", username, e);
             throw new RuntimeException(e);
         }
     }
@@ -183,11 +150,5 @@ public class UserServiceImpl implements UserService {
     public CompleteResponse<Object> test(String input) {
         return new CompleteResponse<>(new ResponseBody<>(null, null, null, encryptData(input)), HttpStatusCodeEnum.OK.value());
 
-    }
-
-    private String resolveErrorCode(ErrorCodeEnum errorCodeEnum) {
-        Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByHttpCode(String.valueOf(errorCodeEnum));
-        return errorCodeOptional.map(ErrorCode::getErrorCode)
-                .orElse(errorCodeEnum.getCode().isEmpty() ? UNDEFINED_ERROR_CODE.getCode() : errorCodeEnum.getCode());
     }
 }

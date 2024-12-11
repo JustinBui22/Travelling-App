@@ -6,9 +6,9 @@ import lombok.extern.log4j.Log4j2;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 @Log4j2
-public class Validator {
+public class InputValidator {
     private static boolean validateInput(String input, Optional<Configuration> configEntity, String defaultPattern, String logMessage) {
         String patternString = configEntity.map(Configuration::getConfigValue).orElseGet(() -> {
             log.info(logMessage);

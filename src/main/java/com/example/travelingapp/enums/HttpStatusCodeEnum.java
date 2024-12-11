@@ -15,10 +15,9 @@ public enum HttpStatusCodeEnum {
     PASSWORD_NOT_CORRECT(606, Series.ERROR, "Password not correct"),
     UNDEFINED_ERROR_CODE(607, Series.ERROR, "Undefined error code"),
     UNDEFINED_HTTP_CODE(608, Series.ERROR, "Undefined http status code"),
-    USER_CREATED(609, Series.SUCCESSFUL, "User created successfully"),
-    CONFIG_NOT_FOUND(610, Series.ERROR, "Config in database not found"),
-    USERNAME_FORMAT_INVALID(611, Series.BAD_REQUEST, "Username format invalid"),
-    LOGIN_SUCCESS(612, Series.SUCCESSFUL, "Login successful"),
+    CONFIG_NOT_FOUND(609, Series.ERROR, "Config in database not found"),
+    USERNAME_FORMAT_INVALID(610, Series.BAD_REQUEST, "Username format invalid"),
+    TOKEN_GENERATE_FAIL(611, Series.ERROR, "Token generated fail"),
 
 
     CONTINUE(100, HttpStatusCodeEnum.Series.INFORMATIONAL, "Continue"),
@@ -143,19 +142,6 @@ public enum HttpStatusCodeEnum {
 
     public Series series() {
         return this.series;
-    }
-
-    public String reasonPhrase() {
-        return this.reasonPhrase;
-    }
-
-    public static HttpStatusCodeEnum getHttpFromErrorCode(String errorCode) {
-        for (HttpStatusCodeEnum httpStatusCodeEnum : HttpStatusCodeEnum.values()) {
-            if (String.valueOf(httpStatusCodeEnum.value()).equals(errorCode)) {
-                return httpStatusCodeEnum;
-            }
-        }
-        return UNDEFINED_HTTP_CODE;
     }
 
     public boolean is1xxInformational() {

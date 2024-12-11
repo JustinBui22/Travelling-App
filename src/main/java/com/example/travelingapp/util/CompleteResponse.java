@@ -1,9 +1,15 @@
 package com.example.travelingapp.util;
 
+import com.example.travelingapp.entity.ErrorCode;
+import com.example.travelingapp.enums.HttpStatusCodeEnum;
+import com.example.travelingapp.repository.ErrorCodeRepository;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
+
+import java.util.Optional;
+
+import static com.example.travelingapp.enums.ErrorCodeEnum.UNDEFINED_ERROR_CODE;
+import static com.example.travelingapp.enums.ErrorCodeEnum.getHttpFromErrorCode;
 
 @Setter
 @Getter
@@ -16,14 +22,19 @@ public final class CompleteResponse<T> {
         this.httpCode = httpCode;
     }
 
-    public CompleteResponse() {
+    public static CompleteResponse<Object> getCompleteResponse(ErrorCodeRepository errorCodeRepository, String errorCode, String flow) {
+        HttpStatusCodeEnum httpStatusCode = getHttpFromErrorCode(errorCode);
+        Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorCode(errorCode);
+        String errorMessage = errorCodeOptional.map(ErrorCode::getErrorMessage).orElse(UNDEFINED_ERROR_CODE.getMessage());
+        String errorDescription = errorCodeOptional.map(ErrorCode::getErrorDescription).orElse(null);
+        return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, flow, errorDescription), httpStatusCode.value());
     }
 
-    public ResponseEntity<Object> createResponse(ResponseBody<T> responseBody, int httpCode) {
-        CompleteResponse<T> responseData = new CompleteResponse<>();
-        responseData.setResponseBody(responseBody);
-        responseData.setHttpCode(httpCode);
-        return new ResponseEntity<>(responseData, HttpStatusCode.valueOf(responseData.getHttpCode()));
+    public static CompleteResponse<Object> getCompleteResponse(ErrorCodeRepository errorCodeRepository, String errorCode, String flow, String token) {
+        HttpStatusCodeEnum httpStatusCode = getHttpFromErrorCode(errorCode);
+        Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorCode(errorCode);
+        String errorMessage = errorCodeOptional.map(ErrorCode::getErrorMessage).orElse(UNDEFINED_ERROR_CODE.getMessage());
+        return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, flow, token), httpStatusCode.value());
     }
 }
 
