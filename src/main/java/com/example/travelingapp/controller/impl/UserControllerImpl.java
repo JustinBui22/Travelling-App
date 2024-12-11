@@ -21,7 +21,6 @@ public class UserControllerImpl implements UserController {
     public ResponseEntity<ResponseBody<Object>> createNewUserByPhoneNumber(UserDTO registerRequest) {
         CompleteResponse<Object> response = userService.createNewUserByPhoneNumber(registerRequest);
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
-
     }
 
     public ResponseEntity<ResponseBody<Object>> createNewUserByEmail(UserDTO registerRequest) {
