@@ -14,8 +14,9 @@ public enum CommonEnum {
     EMAIL_PATTERN(Group.Config),
     PHONE_VN_PATTERN(Group.Config),
     USERNAME_PATTERN(Group.Config),
+    SECRET_KEY_CONFIG(Group.Config),
 
-    EXPIRATION_TIME(Group.Config),
+    TOKEN_EXPIRATION_TIME(Group.Config),
 
     AES(Group.Algorithm),
     RSA(Group.Algorithm),

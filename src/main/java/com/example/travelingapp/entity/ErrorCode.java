@@ -17,7 +17,7 @@ public class ErrorCode {
     @Column(name = "errorId")
     private int errorId;
 
-    @Column(name = "error_code", nullable = false, unique = true)
+    @Column(name = "error_code", nullable = false)
     private String errorCode;
 
     @Column(name = "error_message", nullable = false)
@@ -26,7 +26,7 @@ public class ErrorCode {
     @Column(name = "error_description")
     private String errorDescription;
 
-    @Column(name = "createdD_date", unique = true)
+    @Column(name = "createdD_date")
     private LocalDate createdDate;
 
     @Column(name = "modified_date")
@@ -35,8 +35,14 @@ public class ErrorCode {
     @Column(name = "error_type")
     private String errorType;
 
-    @Column(name = "http_code")
-    private String httpCode;
+    @Column(name = "error_enum", nullable = false)
+    private String errorEnum;
+
+    @Column(name = "http_code", nullable = false)
+    private int httpCode;
+
+    @Column(name = "flow")
+    private String flow;
 
     public ErrorCode() {
 

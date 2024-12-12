@@ -9,6 +9,7 @@ import java.util.Optional;
 @Repository
 public interface ErrorCodeRepository extends JpaRepository<ErrorCode, Integer> {
 
-    Optional<ErrorCode> findByErrorCode(String errorCode);
-    Optional<ErrorCode> findByHttpCode(String httpStatus);
+    Optional<ErrorCode> findByErrorCodeAndFlow(String errorCode, String flow);
+    Optional<ErrorCode> findByErrorCodeAndErrorEnumAndFlow(String errorCode, String errorEnum, String flow);
+    Optional<ErrorCode> findByErrorEnum(String httpStatus);
 }
