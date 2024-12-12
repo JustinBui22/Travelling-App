@@ -9,6 +9,9 @@ import static com.example.travelingapp.enums.CommonEnum.*;
 @Getter
 public enum ErrorCodeEnum {
     USER_CREATED("E000", "User created", Register, HttpStatusCodeEnum.OK),
+    LOGIN_SUCCESS("E000", "Log in successfully", Login, HttpStatusCodeEnum.OK),
+    TOKEN_GENERATE_SUCCESS("E000", "Token generate successfully", Token, HttpStatusCodeEnum.OK),
+    TOKEN_VERIFY_SUCCESS("E000", "Token verified successfully", Token, HttpStatusCodeEnum.OK),
     INVALID_INPUT("E001", "Invalid input provided", Register, HttpStatusCodeEnum.INVALID_INPUT),
     USERNAME_TAKEN("E002", "Username taken", Register, HttpStatusCodeEnum.USERNAME_TAKEN),
     EMAIL_TAKEN("E003", "Email taken", Register, HttpStatusCodeEnum.EMAIL_TAKEN),
@@ -22,11 +25,8 @@ public enum ErrorCodeEnum {
     PHONE_FORMAT_INVALID("E011", "Phone format is invalid", Register, HttpStatusCodeEnum.PHONE_FORMAT_INVALID),
     SMS_NOT_CONFIG("E012", "Sms config is not found", Common, HttpStatusCodeEnum.CONFIG_NOT_FOUND),
     USERNAME_FORMAT_INVALID("E013", "Username format invalid", Register, HttpStatusCodeEnum.USERNAME_FORMAT_INVALID),
-    LOGIN_SUCCESS("E000", "Log in successfully", Login, HttpStatusCodeEnum.OK),
-
-    TOKEN_GENERATE_SUCCESS("E000", "Token generate successfully", Token, HttpStatusCodeEnum.OK),
-    TOKEN_VERIFY_SUCCESS("E000", "Token generate successfully", Token, HttpStatusCodeEnum.OK),
-    TOKEN_GENERATE_FAIL("E014", "Token generate fail", Token, HttpStatusCodeEnum.TOKEN_GENERATE_FAIL);
+    TOKEN_GENERATE_FAIL("E014", "Token generate fail", Token, HttpStatusCodeEnum.TOKEN_GENERATE_FAIL),
+    TOKEN_VERIFY_FAIL("E015", "Token generate successfully", Token, HttpStatusCodeEnum.TOKEN_VERIFY_FAIL);
 
 
     private final String code;
@@ -55,5 +55,4 @@ public enum ErrorCodeEnum {
         log.info("Error code {} has not been defined yet!", errorCode);
         return HttpStatusCodeEnum.UNDEFINED_ERROR_CODE;
     }
-
 }

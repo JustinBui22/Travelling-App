@@ -1,5 +1,6 @@
 package com.example.travelingapp.security.filter;
 
+import com.example.travelingapp.repository.ErrorCodeRepository;
 import com.example.travelingapp.service.impl.TokenServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,16 +15,22 @@ import java.io.IOException;
 
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import static com.example.travelingapp.enums.ErrorCodeEnum.TOKEN_GENERATE_SUCCESS;
+import static com.example.travelingapp.enums.CommonEnum.Token;
+import static com.example.travelingapp.enums.ErrorCodeEnum.*;
+import static com.example.travelingapp.util.CompleteResponse.getCompleteResponse;
+import static com.example.travelingapp.util.common.DataConverter.toJson;
+import static com.example.travelingapp.util.common.ErrorCodeResolver.resolveErrorCode;
 
 @Log4j2
 @Component
 public class TokenFilter extends OncePerRequestFilter {
 
     private final TokenServiceImpl tokenServiceImpl;
+    private final ErrorCodeRepository errorCodeRepository;
 
-    public TokenFilter(TokenServiceImpl tokenServiceImpl) {
+    public TokenFilter(TokenServiceImpl tokenServiceImpl, ErrorCodeRepository errorCodeRepository) {
         this.tokenServiceImpl = tokenServiceImpl;
+        this.errorCodeRepository = errorCodeRepository;
     }
 
     @Override
@@ -33,18 +40,20 @@ public class TokenFilter extends OncePerRequestFilter {
         log.info("Start validating token!");
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            if (tokenServiceImpl.validateToken(token).getResponseBody().getCode().equals(TOKEN_GENERATE_SUCCESS.getCode())) {
+            String inputToken = authHeader.substring(7);
+            if (tokenServiceImpl.validateToken(inputToken).getResponseBody().getCode().equals(TOKEN_VERIFY_SUCCESS.getCode())) {
                 // Add the phone number to request attributes for further use
+                log.info("Token is valid!");
                 response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().write("Token valid");
             } else {
+                log.warn("Invalid token!");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid Token");
+                response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name())));
                 return;
             }
         }
         filterChain.doFilter(request, response);
     }
+
 }
 

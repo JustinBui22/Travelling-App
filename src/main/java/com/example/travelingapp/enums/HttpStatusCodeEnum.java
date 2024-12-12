@@ -7,8 +7,8 @@ public enum HttpStatusCodeEnum {
     INVALID_INPUT(600, Series.BAD_REQUEST, "Invalid input provided"),
     USERNAME_TAKEN(601, Series.BAD_REQUEST, "Username taken"),
     EMAIL_TAKEN(602, Series.BAD_REQUEST, "Email taken"),
-    EMAIL_PATTERN_INVALID(602, Series.BAD_REQUEST, "Email form is invalid"),
-    PHONE_FORMAT_INVALID(610, Series.BAD_REQUEST, "Phone format is invalid"),
+    EMAIL_PATTERN_INVALID(613, Series.BAD_REQUEST, "Email form is invalid"),
+    PHONE_FORMAT_INVALID(614, Series.BAD_REQUEST, "Phone format is invalid"),
     PASSWORD_NOT_QUALIFIED(603, Series.BAD_REQUEST, "Password not qualified"),
     USER_NOT_FOUND(604, Series.ERROR, "User not found"),
     CLIENT_SERVER_ERROR(605, Series.ERROR, "Client internal server error"),
@@ -18,6 +18,7 @@ public enum HttpStatusCodeEnum {
     CONFIG_NOT_FOUND(609, Series.ERROR, "Config in database not found"),
     USERNAME_FORMAT_INVALID(610, Series.BAD_REQUEST, "Username format invalid"),
     TOKEN_GENERATE_FAIL(611, Series.ERROR, "Token generated fail"),
+    TOKEN_VERIFY_FAIL(612, Series.ERROR, "Token verified fail"),
 
 
     CONTINUE(100, HttpStatusCodeEnum.Series.INFORMATIONAL, "Continue"),

@@ -24,15 +24,15 @@ public final class CompleteResponse<T> {
 
     public static CompleteResponse<Object> getCompleteResponse(ErrorCodeRepository errorCodeRepository, String errorCode, String flow) {
         HttpStatusCodeEnum httpStatusCode = getHttpFromErrorCode(errorCode);
-        Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorCode(errorCode);
+        Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorCodeAndFlow(errorCode, flow);
         String errorMessage = errorCodeOptional.map(ErrorCode::getErrorMessage).orElse(UNDEFINED_ERROR_CODE.getMessage());
         String errorDescription = errorCodeOptional.map(ErrorCode::getErrorDescription).orElse(null);
         return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, flow, errorDescription), httpStatusCode.value());
     }
 
-    public static CompleteResponse<Object> getCompleteResponse(ErrorCodeRepository errorCodeRepository, String errorCode, String flow, String token) {
+    public static CompleteResponse<Object> getCompleteResponse(ErrorCodeRepository errorCodeRepository, String errorCode, String errorEnum, String flow, String token) {
         HttpStatusCodeEnum httpStatusCode = getHttpFromErrorCode(errorCode);
-        Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorCode(errorCode);
+        Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorCodeAndErrorEnumAndFlow(errorCode, errorEnum, flow);
         String errorMessage = errorCodeOptional.map(ErrorCode::getErrorMessage).orElse(UNDEFINED_ERROR_CODE.getMessage());
         return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, flow, token), httpStatusCode.value());
     }

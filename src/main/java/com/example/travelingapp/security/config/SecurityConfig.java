@@ -14,10 +14,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, TokenFilter tokenFilter) throws Exception {
         http
+                .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET,"/auth/token").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/register/phone").authenticated()
-                        .requestMatchers("/login").authenticated()
+                        .requestMatchers(HttpMethod.POST,"/users/register/phone").authenticated()
+                        .requestMatchers(HttpMethod.POST, "users/login").authenticated()
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class); // Add the token filter

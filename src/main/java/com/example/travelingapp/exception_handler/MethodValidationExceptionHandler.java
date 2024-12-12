@@ -27,7 +27,7 @@ public class MethodValidationExceptionHandler {
         StringBuilder errorMessage;
         if (ex.getBindingResult().hasErrors()) {
             errorMessage = new StringBuilder(Objects.requireNonNull(ex.getBindingResult().getAllErrors().getFirst().getDefaultMessage())).append(";");
-            Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByHttpCode(String.valueOf(INVALID_INPUT));
+            Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorEnum(String.valueOf(INVALID_INPUT));
             String errorCode = errorCodeOptional.map(ErrorCode::getErrorCode)
                     .orElse(INVALID_INPUT.getCode().isEmpty() ? UNDEFINED_ERROR_CODE.getCode() : INVALID_INPUT.getCode());
 

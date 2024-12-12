@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
                     smsServiceImpl.sendSms(registerRequest.getPhoneNumber(), registerMessage);
 
                     User newUser = new User(registerRequest.getUsername(), encryptData(registerRequest.getPassword()),
-                            registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now());
+                            registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail());
                     userRepository.save(newUser);
                     log.info("User has been created!");
                     errorCode = resolveErrorCode(errorCodeRepository, USER_CREATED);

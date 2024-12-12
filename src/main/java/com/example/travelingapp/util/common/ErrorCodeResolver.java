@@ -12,7 +12,7 @@ import static com.example.travelingapp.enums.ErrorCodeEnum.UNDEFINED_ERROR_CODE;
 @Log4j2
 public class ErrorCodeResolver {
     public static String resolveErrorCode(ErrorCodeRepository errorCodeRepository, ErrorCodeEnum errorCodeEnum) {
-        Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByHttpCode(String.valueOf(errorCodeEnum));
+        Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorEnum(errorCodeEnum.name());
         return errorCodeOptional.map(ErrorCode::getErrorCode)
                 .orElseGet(() -> {
                     if (errorCodeEnum.getCode().isEmpty()) {
