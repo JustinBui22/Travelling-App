@@ -19,7 +19,7 @@ public enum HttpStatusCodeEnum {
     USERNAME_FORMAT_INVALID(610, Series.BAD_REQUEST, "Username format invalid"),
     TOKEN_GENERATE_FAIL(611, Series.ERROR, "Token generated fail"),
     TOKEN_VERIFY_FAIL(612, Series.ERROR, "Token verified fail"),
-
+    TOKEN_EXPIRE(613, Series.ERROR, "Token expires"),
 
     CONTINUE(100, HttpStatusCodeEnum.Series.INFORMATIONAL, "Continue"),
     SWITCHING_PROTOCOLS(101, HttpStatusCodeEnum.Series.INFORMATIONAL, "Switching Protocols"),
