@@ -7,6 +7,7 @@ import com.example.travelingapp.repository.ErrorCodeRepository;
 import com.example.travelingapp.service.TokenService;
 import com.example.travelingapp.util.CompleteResponse;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -77,14 +78,13 @@ public class TokenServiceImpl implements TokenService {
                     .parseClaimsJws(token) // This validates the token
                     .getBody();
             phoneNumber = claims.getSubject();
+        } catch (ExpiredJwtException e) {
+            return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_EXPIRE), Token.name());
         } catch (Exception e) {
-            log.error("The token is invalid! {}", e.getMessage());
             return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name());
         }
         log.info("The token is valid for userID {}", phoneNumber);
-        String errorCode = resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_SUCCESS);
-        ErrorCodeEnum errorCodeEnum = Objects.equals(errorCode, TOKEN_VERIFY_SUCCESS.getCode()) ? TOKEN_VERIFY_SUCCESS : TOKEN_VERIFY_FAIL;
-        return getCompleteResponse(errorCodeRepository, errorCode, errorCodeEnum.name(), Token.name(), phoneNumber);
+        return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_SUCCESS), TOKEN_VERIFY_SUCCESS.name(), Token.name(), phoneNumber);
     }
 
     // Method to get the SECRET key dynamically

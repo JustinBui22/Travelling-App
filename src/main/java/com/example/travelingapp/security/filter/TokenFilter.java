@@ -41,10 +41,15 @@ public class TokenFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String inputToken = authHeader.substring(7);
-            if (tokenServiceImpl.validateToken(inputToken).getResponseBody().getCode().equals(TOKEN_VERIFY_SUCCESS.getCode())) {
+            String responseCode = tokenServiceImpl.validateToken(inputToken).getResponseBody().getCode();
+            if (responseCode.equals(TOKEN_VERIFY_SUCCESS.getCode())) {
                 // Add the phone number to request attributes for further use
-                log.info("Token is valid!");
                 response.setStatus(HttpServletResponse.SC_OK);
+            } else if (responseCode.equals(TOKEN_EXPIRE.getCode())) {
+                log.warn("Session expired!");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_EXPIRE), Token.name())));
+                return;
             } else {
                 log.warn("Invalid token!");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
