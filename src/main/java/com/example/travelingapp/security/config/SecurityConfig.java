@@ -24,24 +24,22 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, TokenFilter tokenFilter, Environment environment) throws Exception {
-        String[] nonAuthenticatedUrls = getNonAuthenticatedUrls(configurationRepository);
         String contextPath = environment.getProperty("server.servlet.context-path", "/The-Project");
-
         // Configure HttpSecurity with dynamic non-authenticated URLs
         http
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> {
                     // Permit the non-authenticated URLs dynamically
-                    Arrays.stream(nonAuthenticatedUrls)
+                    Arrays.stream(getNonAuthenticatedUrls(configurationRepository))
                             .forEach(url -> auth.requestMatchers(url.replaceFirst("^" + contextPath, "")).permitAll());
 //                    auth.requestMatchers("/users/register/phone").permitAll();
                     auth.anyRequest().authenticated();
                 })
-                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class) ;// Add the token filter
-//                .oauth2Login(oauth2 -> oauth2
-//                .defaultSuccessUrl("/welcome", true)
-//                .failureUrl("/login?error")
-//        );
+                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class) // Add the token filter
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("/welcome", true)
+                        .failureUrl("/login?error")
+                );
         return http.build();
     }
 }

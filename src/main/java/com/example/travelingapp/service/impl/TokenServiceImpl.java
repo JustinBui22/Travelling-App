@@ -67,8 +67,8 @@ public class TokenServiceImpl implements TokenService {
                 .filter(t -> !t.isEmpty()) // Check if token is not empty
                 .map(t -> resolveErrorCode(errorCodeRepository, TOKEN_GENERATE_SUCCESS))
                 .orElseGet(() -> {
-                    log.error("There is an error generating token!"); // Log the error
-                    return resolveErrorCode(errorCodeRepository, TOKEN_GENERATE_FAIL); // Return failure error code
+                    log.error("There is an error generating token!");
+                    return resolveErrorCode(errorCodeRepository, TOKEN_GENERATE_FAIL);
                 });
         ErrorCodeEnum errorCodeEnum = Objects.equals(errorCode, TOKEN_GENERATE_SUCCESS.getCode()) ? TOKEN_GENERATE_SUCCESS : TOKEN_GENERATE_FAIL;
         return getCompleteResponse(errorCodeRepository, errorCode, errorCodeEnum.name(), Token.name(), token);

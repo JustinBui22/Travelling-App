@@ -25,9 +25,7 @@ public class Common {
                     .map(url -> url.replaceAll("\\n", "").trim()) // Remove newline characters and trim spaces
                     .toArray(String[]::new);
         } else {
-            // Log the warning if no configuration is found
             log.warn("There is no config for {}", NON_AUTHENTICATED_REQUEST);
-            // Return an empty array if no configuration is found
             return new String[0];
         }
     }
