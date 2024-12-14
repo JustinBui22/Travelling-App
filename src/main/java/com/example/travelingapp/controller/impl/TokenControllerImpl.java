@@ -22,4 +22,10 @@ public class TokenControllerImpl implements TokenController {
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
 
     }
+
+    @Override
+    public ResponseEntity<ResponseBody<Object>> refreshToken(String authorizationHeader) {
+        CompleteResponse<Object> response = tokenService.refreshToken(authorizationHeader);
+        return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
+    }
 }

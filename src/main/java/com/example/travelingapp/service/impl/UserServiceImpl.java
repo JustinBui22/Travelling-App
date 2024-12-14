@@ -17,6 +17,9 @@ import com.example.travelingapp.repository.UserRepository;
 
 import java.time.LocalDate;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -91,7 +94,7 @@ public class UserServiceImpl implements UserService {
                     smsServiceImpl.sendSms(registerRequest.getPhoneNumber(), registerMessage);
 
                     User newUser = new User(registerRequest.getUsername(), encryptData(registerRequest.getPassword()),
-                            registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail());
+                            registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true);
                     userRepository.save(newUser);
                     log.info("User has been created!");
                     errorCode = resolveErrorCode(errorCodeRepository, USER_CREATED);
@@ -123,37 +126,36 @@ public class UserServiceImpl implements UserService {
                 configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name())
         );
         // Retrieve the user based on username type (phone number or normal username)
-        Optional<User> user = isPhoneNumber ?
-                userRepository.findByPhoneNumber(username) :
+        Optional<User> userOptional = isPhoneNumber ?
+                userRepository.findByPhoneNumberAndStatus(username, true) :
                 userRepository.findByUsername(username);
         try {
             // Handle user not found
-            if (user.isEmpty()) {
+            if (userOptional.isEmpty()) {
                 log.info("User {} not found!", username);
                 errorCode = resolveErrorCode(errorCodeRepository, USER_NOT_FOUND);
             } else {
+                User user = userOptional.get();
                 // check if password matches and display corresponding error code.
-                boolean isPasswordCorrect = encryptData(password).equals(user.get().getPassword());
+                boolean isPasswordCorrect = encryptData(password).equals(user.getPassword());
                 errorCode = isPasswordCorrect
                         ? resolveErrorCode(errorCodeRepository, LOGIN_SUCCESS)
                         : resolveErrorCode(errorCodeRepository, PASSWORD_NOT_CORRECT);
-                log.info(encryptData(password).equals(user.get().getPassword())
+                log.info(encryptData(password).equals(user.getPassword())
                         ? "User {} logged in successfully!"
                         : "Password incorrect!", username);
 
                 // Establishes the authentication context for the session after successful login.
                 if (isPasswordCorrect) {
-//                    User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//                    log.info("Current user: {}", userDetails.getPhoneNumber());
+                    log.info("Current user: {}", user.getPhoneNumber());
+                    // Create an authentication object from the user
+                    Authentication authentication = new UsernamePasswordAuthenticationToken(
+                            user, null, user.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
 
-//                    // Create an authentication object from the user
-//                    Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-//                    // The user’s details are available throughout the session or until the token expires
-//                    SecurityContextHolder.getContext().setAuthentication(authentication);
-
-//                     Change userName to phoneNumber
+                    // Change userName to phoneNumber
                     if (!isPhoneNumber) {
-                        username = user.get().getPhoneNumber();
+                        username = user.getPhoneNumber();
                     }
                     // Generate and return the JWT token
                     String token = tokenServiceImpl.generateToken(username).getResponseBody().getBody().toString();
