@@ -17,9 +17,6 @@ import com.example.travelingapp.repository.UserRepository;
 
 import java.time.LocalDate;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -120,7 +117,6 @@ public class UserServiceImpl implements UserService {
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
         String errorCode;
-
         // Validate if the username is a phone number
         boolean isPhoneNumber = validatePhoneForm(
                 username,
@@ -147,21 +143,21 @@ public class UserServiceImpl implements UserService {
 
                 // Establishes the authentication context for the session after successful login.
                 if (isPasswordCorrect) {
-                    User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-                    log.info("Current user: {}", userDetails.getPhoneNumber());
+//                    User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//                    log.info("Current user: {}", userDetails.getPhoneNumber());
 
-                    // Create an authentication object from the user
-                    Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    // The user’s details are available throughout the session or until the token expires
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+//                    // Create an authentication object from the user
+//                    Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+//                    // The user’s details are available throughout the session or until the token expires
+//                    SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    // Change userName to phoneNumber
+//                     Change userName to phoneNumber
                     if (!isPhoneNumber) {
                         username = user.get().getPhoneNumber();
                     }
                     // Generate and return the JWT token
                     String token = tokenServiceImpl.generateToken(username).getResponseBody().getBody().toString();
-                    return getCompleteResponse(errorCodeRepository, errorCode, null, Login.name(), token);
+                    return getCompleteResponse(errorCodeRepository, errorCode, LOGIN_SUCCESS.name(), Login.name(), token);
                 }
             }
             return getCompleteResponse(errorCodeRepository, errorCode, Login.name());
