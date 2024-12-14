@@ -4,6 +4,7 @@ import com.example.travelingapp.repository.ConfigurationRepository;
 import com.example.travelingapp.security.filter.TokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -22,9 +23,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, TokenFilter tokenFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, TokenFilter tokenFilter, Environment environment) throws Exception {
         String[] nonAuthenticatedUrls = getNonAuthenticatedUrls(configurationRepository);
-        String contextPath = System.getProperty("server.servlet.context-path", "/The-Project");
+        String contextPath = environment.getProperty("server.servlet.context-path", "/The-Project");
 
         // Configure HttpSecurity with dynamic non-authenticated URLs
         http
@@ -36,11 +37,11 @@ public class SecurityConfig {
 //                    auth.requestMatchers("/users/register/phone").permitAll();
                     auth.anyRequest().authenticated();
                 })
-                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class) // Add the token filter
-                .oauth2Login(oauth2 -> oauth2
-                .defaultSuccessUrl("/welcome", true)
-                .failureUrl("/login?error")
-        );
+                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class) ;// Add the token filter
+//                .oauth2Login(oauth2 -> oauth2
+//                .defaultSuccessUrl("/welcome", true)
+//                .failureUrl("/login?error")
+//        );
         return http.build();
     }
 }

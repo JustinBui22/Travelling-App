@@ -54,8 +54,6 @@ public class TokenFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);  // Allow the request to proceed
                 return;
             }
-
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             if (responseCode.equals(USER_NOT_FOUND.getCode())) {
                 response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, USER_NOT_FOUND), Token.name())));
             } else if (responseCode.equals(TOKEN_EXPIRE.getCode())) {
@@ -67,15 +65,15 @@ public class TokenFilter extends OncePerRequestFilter {
             }
             return;
         }
-
         if (Arrays.stream(getNonAuthenticatedUrls(configurationRepository))
                 .anyMatch(url -> request.getRequestURI().trim().contains(url))) {
+            log.info("No authentication needed for API {}", request.getRequestURI());
             response.setStatus(HttpServletResponse.SC_OK);
+        } else {
+            log.info("No valid authentication found for API {}", request.getRequestURI());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
-
-        log.info("No valid authentication found for API {}", request.getRequestURI());
         filterChain.doFilter(request, response);  // Continue processing for unauthenticated requests
     }
-
 }
 
