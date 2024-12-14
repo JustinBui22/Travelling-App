@@ -26,8 +26,8 @@ public enum ErrorCodeEnum {
     SMS_NOT_CONFIG("E012", "Sms config is not found", Common, HttpStatusCodeEnum.CONFIG_NOT_FOUND),
     USERNAME_FORMAT_INVALID("E013", "Username format invalid", Register, HttpStatusCodeEnum.USERNAME_FORMAT_INVALID),
     TOKEN_GENERATE_FAIL("E014", "Token generate fail", Token, HttpStatusCodeEnum.TOKEN_GENERATE_FAIL),
-    TOKEN_VERIFY_FAIL("E015", "Token generate successfully", Token, HttpStatusCodeEnum.TOKEN_VERIFY_FAIL),
-    TOKEN_EXPIRE("E016", "Token generate successfully", Token, HttpStatusCodeEnum.TOKEN_EXPIRE);
+    TOKEN_VERIFY_FAIL("E015", "Token verify fail", Token, HttpStatusCodeEnum.TOKEN_VERIFY_FAIL),
+    TOKEN_EXPIRE("E016", "Token expires", Token, HttpStatusCodeEnum.TOKEN_EXPIRE);
 
 
     private final String code;
