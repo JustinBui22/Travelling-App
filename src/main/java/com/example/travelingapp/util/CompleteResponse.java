@@ -3,6 +3,7 @@ package com.example.travelingapp.util;
 import com.example.travelingapp.entity.ErrorCode;
 import com.example.travelingapp.enums.HttpStatusCodeEnum;
 import com.example.travelingapp.repository.ErrorCodeRepository;
+import io.jsonwebtoken.Claims;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,11 +31,11 @@ public final class CompleteResponse<T> {
         return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, flow, errorDescription), httpStatusCode.value());
     }
 
-    public static CompleteResponse<Object> getCompleteResponse(ErrorCodeRepository errorCodeRepository, String errorCode, String errorEnum, String flow, String token) {
+    public static CompleteResponse<Object> getCompleteResponse(ErrorCodeRepository errorCodeRepository, String errorCode, String errorEnum, String flow, Object object) {
         HttpStatusCodeEnum httpStatusCode = getHttpFromErrorCode(errorCode);
         Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorCodeAndErrorEnumAndFlow(errorCode, errorEnum, flow);
         String errorMessage = errorCodeOptional.map(ErrorCode::getErrorMessage).orElse(UNDEFINED_ERROR_CODE.getMessage());
-        return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, flow, token), httpStatusCode.value());
+        return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, flow, object), httpStatusCode.value());
     }
 }
 

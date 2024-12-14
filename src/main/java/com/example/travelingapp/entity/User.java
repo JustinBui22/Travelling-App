@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serial;
@@ -47,19 +48,23 @@ public class User implements Serializable, UserDetails {
     @Column(name = "phone_num")
     private String phoneNumber;
 
+    @Column(name = "status", nullable = false)
+    private boolean status;
+
     public User(String username, String password, String email) {
         this.username = username;
         this.password = password;
         this.email = email;
     }
 
-    public User(String username, String password, String phoneNumber, LocalDate dob, LocalDate createdDate, String email) {
+    public User(String username, String password, String phoneNumber, LocalDate dob, LocalDate createdDate, String email, boolean status) {
         this.username = username;
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.dob = dob;
         this.createdDate = createdDate;
         this.email = email;
+        this.status = status;
     }
 
     public User() {

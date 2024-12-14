@@ -74,10 +74,28 @@ public class TokenServiceImpl implements TokenService {
         return getCompleteResponse(errorCodeRepository, errorCode, errorCodeEnum.name(), Token.name(), token);
     }
 
+    @Override
+    public CompleteResponse<Object> refreshToken(String authorizationHeader) {
+        // Checking if the request has the authorization header
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name());
+        }
+        String token = authorizationHeader.substring(7);
+        CompleteResponse<Object> validationResponse = validateToken(token);
+
+        if (validationResponse.getResponseBody().getCode().equals(TOKEN_VERIFY_SUCCESS.getCode())) {
+            String phoneNumber = (String) validationResponse.getResponseBody().getBody();
+            return generateToken(phoneNumber);
+        } else {
+            return validationResponse; // Return the validation failure reason
+        }
+    }
+
     // Validate the token and extract the phone number
     public CompleteResponse<Object> validateToken(String token) {
         log.info("Start validating token!");
         String phoneNumber;
+        Optional<User> userOptional;
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(getSecretKey())
@@ -88,23 +106,25 @@ public class TokenServiceImpl implements TokenService {
 
             // Validate if the token's user exists
             log.info("Start checking if user {} is registered!", phoneNumber);
-            Optional<User> userOptional = userRepository.findByPhoneNumber(phoneNumber);
+            userOptional = userRepository.findByPhoneNumberAndStatus(phoneNumber, true);
             if (userOptional.isEmpty()) {
                 log.info("There is no user with phone number {}", phoneNumber);
                 getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, USER_NOT_FOUND), Token.name());
             }
-
-            User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            log.info("Current user: {}", userDetails.getPhoneNumber());
-            Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (ExpiredJwtException e) {
+            log.info("Token expires!");
             return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_EXPIRE), Token.name());
         } catch (Exception e) {
+            log.info("Token verification failed!");
             return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name());
         }
+
         log.info("The token is valid for userID {}", phoneNumber);
-        return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_SUCCESS), TOKEN_VERIFY_SUCCESS.name(), Token.name(), phoneNumber);
+//        User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//        log.info("Current user: {}", userDetails.getPhoneNumber());
+//        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_SUCCESS), TOKEN_VERIFY_SUCCESS.name(), Token.name(), userOptional.get());
     }
 
     // Method to get the SECRET key dynamically
