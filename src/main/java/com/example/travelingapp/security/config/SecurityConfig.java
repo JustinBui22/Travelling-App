@@ -16,9 +16,9 @@ public class SecurityConfig {
         http
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST,"/users/register/phone").authenticated()
-                        .requestMatchers(HttpMethod.POST, "users/login").authenticated()
-                        .anyRequest().permitAll()
+                        .requestMatchers(HttpMethod.POST,"/users/register/phone").permitAll()
+                        .requestMatchers(HttpMethod.POST, "users/login").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class); // Add the token filter
 

@@ -17,6 +17,9 @@ import com.example.travelingapp.repository.UserRepository;
 
 import java.time.LocalDate;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -37,14 +40,16 @@ public class UserServiceImpl implements UserService {
     private final SmsRepository smsRepository;
     private final SmsServiceImpl smsServiceImpl;
     private final ErrorCodeRepository errorCodeRepository;
+    private final TokenServiceImpl tokenServiceImpl;
 
 
-    public UserServiceImpl(UserRepository userRepository, ConfigurationRepository configurationRepository, SmsRepository smsRepository, SmsServiceImpl smsServiceImpl, ErrorCodeRepository errorCodeRepository) {
+    public UserServiceImpl(UserRepository userRepository, ConfigurationRepository configurationRepository, SmsRepository smsRepository, SmsServiceImpl smsServiceImpl, ErrorCodeRepository errorCodeRepository, TokenServiceImpl tokenServiceImpl) {
         this.userRepository = userRepository;
         this.configurationRepository = configurationRepository;
         this.smsRepository = smsRepository;
         this.smsServiceImpl = smsServiceImpl;
         this.errorCodeRepository = errorCodeRepository;
+        this.tokenServiceImpl = tokenServiceImpl;
     }
 
     @Override
@@ -128,16 +133,36 @@ public class UserServiceImpl implements UserService {
         try {
             // Handle user not found
             if (user.isEmpty()) {
-                log.info("Username not found!");
+                log.info("User {} not found!", username);
                 errorCode = resolveErrorCode(errorCodeRepository, USER_NOT_FOUND);
             } else {
-                // check if password matches and display correspond error code.
-                errorCode = encryptData(password).equals(user.get().getPassword())
+                // check if password matches and display corresponding error code.
+                boolean isPasswordCorrect = encryptData(password).equals(user.get().getPassword());
+                errorCode = isPasswordCorrect
                         ? resolveErrorCode(errorCodeRepository, LOGIN_SUCCESS)
                         : resolveErrorCode(errorCodeRepository, PASSWORD_NOT_CORRECT);
                 log.info(encryptData(password).equals(user.get().getPassword())
-                        ? "User logged in successfully!"
-                        : "Password incorrect!");
+                        ? "User {} logged in successfully!"
+                        : "Password incorrect!", username);
+
+                // Establishes the authentication context for the session after successful login.
+                if (isPasswordCorrect) {
+                    User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                    log.info("Current user: {}", userDetails.getPhoneNumber());
+
+                    // Create an authentication object from the user
+                    Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    // The user’s details are available throughout the session or until the token expires
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                    // Change userName to phoneNumber
+                    if (!isPhoneNumber) {
+                        username = user.get().getPhoneNumber();
+                    }
+                    // Generate and return the JWT token
+                    String token = tokenServiceImpl.generateToken(username).getResponseBody().getBody().toString();
+                    return getCompleteResponse(errorCodeRepository, errorCode, null, Login.name(), token);
+                }
             }
             return getCompleteResponse(errorCodeRepository, errorCode, Login.name());
         } catch (Exception e) {
