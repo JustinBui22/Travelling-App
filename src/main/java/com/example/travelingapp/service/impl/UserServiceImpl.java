@@ -91,7 +91,7 @@ public class UserServiceImpl implements UserService {
                     smsServiceImpl.sendSms(registerRequest.getPhoneNumber(), registerMessage);
 
                     User newUser = new User(registerRequest.getUsername(), encryptData(registerRequest.getPassword()),
-                            registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail());
+                            registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true);
                     userRepository.save(newUser);
                     log.info("User has been created!");
                     errorCode = resolveErrorCode(errorCodeRepository, USER_CREATED);
@@ -124,7 +124,7 @@ public class UserServiceImpl implements UserService {
         );
         // Retrieve the user based on username type (phone number or normal username)
         Optional<User> user = isPhoneNumber ?
-                userRepository.findByPhoneNumber(username) :
+                userRepository.findByPhoneNumberAndStatus(username, true) :
                 userRepository.findByUsername(username);
         try {
             // Handle user not found

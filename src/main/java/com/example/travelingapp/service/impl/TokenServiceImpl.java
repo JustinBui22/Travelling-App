@@ -88,22 +88,22 @@ public class TokenServiceImpl implements TokenService {
 
             // Validate if the token's user exists
             log.info("Start checking if user {} is registered!", phoneNumber);
-            Optional<User> userOptional = userRepository.findByPhoneNumber(phoneNumber);
+            Optional<User> userOptional = userRepository.findByPhoneNumberAndStatus(phoneNumber, true);
             if (userOptional.isEmpty()) {
                 log.info("There is no user with phone number {}", phoneNumber);
                 getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, USER_NOT_FOUND), Token.name());
             }
-
-            User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            log.info("Current user: {}", userDetails.getPhoneNumber());
-            Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (ExpiredJwtException e) {
             return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_EXPIRE), Token.name());
         } catch (Exception e) {
             return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name());
         }
+
         log.info("The token is valid for userID {}", phoneNumber);
+        User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        log.info("Current user: {}", userDetails.getPhoneNumber());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
         return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_SUCCESS), TOKEN_VERIFY_SUCCESS.name(), Token.name(), phoneNumber);
     }
 
