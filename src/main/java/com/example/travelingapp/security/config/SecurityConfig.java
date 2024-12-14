@@ -36,7 +36,11 @@ public class SecurityConfig {
 //                    auth.requestMatchers("/users/register/phone").permitAll();
                     auth.anyRequest().authenticated();
                 })
-                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class); // Add the token filter
+                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class) // Add the token filter
+                .oauth2Login(oauth2 -> oauth2
+                .defaultSuccessUrl("/welcome", true)
+                .failureUrl("/login?error")
+        );
         return http.build();
     }
 }

@@ -44,35 +44,37 @@ public class TokenFilter extends OncePerRequestFilter {
 
         log.info("Start validating token!");
         String authHeader = request.getHeader("Authorization");
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             String responseCode = tokenServiceImpl.validateToken(token).getResponseBody().getCode();
+
             if (responseCode.equals(TOKEN_VERIFY_SUCCESS.getCode())) {
-                // Add the phone number to request attributes for further use
-                response.setStatus(HttpServletResponse.SC_OK);
-            } else if (responseCode.equals(USER_NOT_FOUND.getCode())) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, USER_NOT_FOUND), Token.name())));
-                return;
-            } else if (responseCode.equals(TOKEN_EXPIRE.getCode())) {
-                log.warn("Session expired!");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_EXPIRE), Token.name())));
-                return;
-            } else {
-                log.warn("Invalid token!");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name())));
+                log.info("Token validated successfully.");
+                filterChain.doFilter(request, response);  // Allow the request to proceed
                 return;
             }
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            if (responseCode.equals(USER_NOT_FOUND.getCode())) {
+                response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, USER_NOT_FOUND), Token.name())));
+            } else if (responseCode.equals(TOKEN_EXPIRE.getCode())) {
+                log.warn("Session expired!");
+                response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_EXPIRE), Token.name())));
+            } else {
+                log.warn("Invalid token!");
+                response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name())));
+            }
+            return;
         }
 
         if (Arrays.stream(getNonAuthenticatedUrls(configurationRepository))
                 .anyMatch(url -> request.getRequestURI().trim().contains(url))) {
             response.setStatus(HttpServletResponse.SC_OK);
         }
-        log.info("There is no selected authentication for api {}!", request.getRequestURI());
-        filterChain.doFilter(request, response);
+
+        log.info("No valid authentication found for API {}", request.getRequestURI());
+        filterChain.doFilter(request, response);  // Continue processing for unauthenticated requests
     }
 
 }
