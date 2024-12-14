@@ -1,9 +1,11 @@
 package com.example.travelingapp.service.impl;
 
 import com.example.travelingapp.entity.Configuration;
+import com.example.travelingapp.entity.User;
 import com.example.travelingapp.enums.ErrorCodeEnum;
 import com.example.travelingapp.repository.ConfigurationRepository;
 import com.example.travelingapp.repository.ErrorCodeRepository;
+import com.example.travelingapp.repository.UserRepository;
 import com.example.travelingapp.service.TokenService;
 import com.example.travelingapp.util.CompleteResponse;
 import io.jsonwebtoken.Claims;
@@ -14,6 +16,9 @@ import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
 
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -32,10 +37,12 @@ import static com.example.travelingapp.util.common.ErrorCodeResolver.resolveErro
 public class TokenServiceImpl implements TokenService {
     private final ConfigurationRepository configurationRepository;
     private final ErrorCodeRepository errorCodeRepository;
+    private final UserRepository userRepository;
 
-    public TokenServiceImpl(ConfigurationRepository configurationRepository, ErrorCodeRepository errorCodeRepository) {
+    public TokenServiceImpl(ConfigurationRepository configurationRepository, ErrorCodeRepository errorCodeRepository, UserRepository userRepository) {
         this.configurationRepository = configurationRepository;
         this.errorCodeRepository = errorCodeRepository;
+        this.userRepository = userRepository;
     }
 
     // Generate a Bearer Token based on the user's phone number
@@ -53,7 +60,7 @@ public class TokenServiceImpl implements TokenService {
                 .setSubject(phoneNumber)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(getSecretKey())
+                .signWith(getSecretKey()) // Specify the signing algorithm
                 .compact();
 
         String errorCode = Optional.of(token)
@@ -78,6 +85,19 @@ public class TokenServiceImpl implements TokenService {
                     .parseClaimsJws(token) // This validates the token
                     .getBody();
             phoneNumber = claims.getSubject();
+
+            // Validate if the token's user exists
+            log.info("Start checking if user {} is registered!", phoneNumber);
+            Optional<User> userOptional = userRepository.findByPhoneNumber(phoneNumber);
+            if (userOptional.isEmpty()) {
+                log.info("There is no user with phone number {}", phoneNumber);
+                getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, USER_NOT_FOUND), Token.name());
+            }
+
+            User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            log.info("Current user: {}", userDetails.getPhoneNumber());
+            Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (ExpiredJwtException e) {
             return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_EXPIRE), Token.name());
         } catch (Exception e) {
