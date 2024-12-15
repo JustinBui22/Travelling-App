@@ -100,6 +100,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     // Validate the token and extract the phone number
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     public CompleteResponse<Object> validateToken(String token) {
         log.info("Start validating token!");
         String phoneNumber;
