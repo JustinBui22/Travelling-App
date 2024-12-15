@@ -76,18 +76,26 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public CompleteResponse<Object> refreshToken(String authorizationHeader) {
+        log.info("Start refreshing token!");
         // Checking if the request has the authorization header
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name());
         }
         String token = authorizationHeader.substring(7);
-        CompleteResponse<Object> validationResponse = validateToken(token);
-
-        if (validationResponse.getResponseBody().getCode().equals(TOKEN_VERIFY_SUCCESS.getCode())) {
-            String phoneNumber = (String) validationResponse.getResponseBody().getBody();
+        String validateTokenCode = validateToken(token).getResponseBody().getCode();
+        if (validateTokenCode.equals(TOKEN_VERIFY_SUCCESS.getCode())) {
+            log.info("Token validated successfully!");
+            SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            String phoneNumber = SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
             return generateToken(phoneNumber);
+        }
+        log.warn("Token validation failed for reason: {}", validateTokenCode);
+        if (validateTokenCode.equals(USER_NOT_FOUND.getCode())) {
+            return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, USER_NOT_FOUND), Token.name());
+        } else if (validateTokenCode.equals(TOKEN_EXPIRE.getCode())) {
+            return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_EXPIRE), Token.name());
         } else {
-            return validationResponse; // Return the validation failure reason
+            return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name());
         }
     }
 
@@ -96,8 +104,9 @@ public class TokenServiceImpl implements TokenService {
         log.info("Start validating token!");
         String phoneNumber;
         Optional<User> userOptional;
+        Claims claims;
         try {
-            Claims claims = Jwts.parserBuilder()
+            claims = Jwts.parserBuilder()
                     .setSigningKey(getSecretKey())
                     .build()
                     .parseClaimsJws(token) // This validates the token
@@ -120,11 +129,12 @@ public class TokenServiceImpl implements TokenService {
         }
 
         log.info("The token is valid for userID {}", phoneNumber);
-//        User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//        log.info("Current user: {}", userDetails.getPhoneNumber());
-//        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-        return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_SUCCESS), TOKEN_VERIFY_SUCCESS.name(), Token.name(), userOptional.get());
+        // Populate SecurityContext with authenticated user
+        User user = userOptional.get();
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                user, user.getPhoneNumber(), user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_SUCCESS), TOKEN_VERIFY_SUCCESS.name(), Token.name(), claims);
     }
 
     // Method to get the SECRET key dynamically
