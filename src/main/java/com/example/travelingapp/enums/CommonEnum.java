@@ -17,6 +17,7 @@ public enum CommonEnum {
     SECRET_KEY_CONFIG(Group.Config),
 
     TOKEN_EXPIRATION_TIME(Group.Config),
+    CURRENT_TOKEN_TIME_LEFT(Group.Config),
     NON_AUTHENTICATED_REQUEST(Group.Config),
 
     AES(Group.Algorithm),

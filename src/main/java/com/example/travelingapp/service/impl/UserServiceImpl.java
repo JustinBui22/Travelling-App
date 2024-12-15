@@ -150,12 +150,12 @@ public class UserServiceImpl implements UserService {
                     log.info("Current user: {}", user.getPhoneNumber());
                     // Create an authentication object from the user
                     Authentication authentication = new UsernamePasswordAuthenticationToken(
-                            user, null, user.getAuthorities());
+                            user, user.getPhoneNumber(), user.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
                     // Change userName to phoneNumber
                     if (!isPhoneNumber) {
-                        username = user.getPhoneNumber();
+                        username = String.valueOf(authentication.getCredentials());
                     }
                     // Generate and return the JWT token
                     String token = tokenServiceImpl.generateToken(username).getResponseBody().getBody().toString();
