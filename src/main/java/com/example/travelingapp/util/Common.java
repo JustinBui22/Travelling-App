@@ -1,4 +1,4 @@
-package com.example.travelingapp.util.common;
+package com.example.travelingapp.util;
 
 import com.example.travelingapp.entity.Configuration;
 import com.example.travelingapp.repository.ConfigurationRepository;

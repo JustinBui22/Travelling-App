@@ -11,7 +11,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.util.Arrays;
 
-import static com.example.travelingapp.util.common.Common.getNonAuthenticatedUrls;
+import static com.example.travelingapp.util.Common.getNonAuthenticatedUrls;
 
 @Configuration
 public class SecurityConfig {

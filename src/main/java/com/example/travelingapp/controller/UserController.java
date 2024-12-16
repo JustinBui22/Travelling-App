@@ -2,7 +2,7 @@ package com.example.travelingapp.controller;
 
 import com.example.travelingapp.dto.LoginDTO;
 import com.example.travelingapp.dto.UserDTO;
-import com.example.travelingapp.util.ResponseBody;
+import com.example.travelingapp.response_template.ResponseBody;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -3,11 +3,12 @@ package com.example.travelingapp.service.impl;
 import com.example.travelingapp.entity.Configuration;
 import com.example.travelingapp.entity.User;
 import com.example.travelingapp.enums.ErrorCodeEnum;
+import com.example.travelingapp.exception_handler.exception.BusinessException;
 import com.example.travelingapp.repository.ConfigurationRepository;
 import com.example.travelingapp.repository.ErrorCodeRepository;
 import com.example.travelingapp.repository.UserRepository;
 import com.example.travelingapp.service.TokenService;
-import com.example.travelingapp.util.CompleteResponse;
+import com.example.travelingapp.response_template.CompleteResponse;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -23,14 +24,12 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.Objects;
 import java.util.Optional;
 
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
-import static com.example.travelingapp.util.CompleteResponse.getCompleteResponse;
-import static com.example.travelingapp.util.common.DataConverter.convertStringToLong;
-import static com.example.travelingapp.util.common.ErrorCodeResolver.resolveErrorCode;
+import static com.example.travelingapp.response_template.CompleteResponse.getCompleteResponse;
+import static com.example.travelingapp.util.DataConverter.convertStringToLong;
 
 @Log4j2
 @Service
@@ -63,15 +62,15 @@ public class TokenServiceImpl implements TokenService {
                 .signWith(getSecretKey()) // Specify the signing algorithm
                 .compact();
 
-        String errorCode = Optional.of(token)
+        ErrorCodeEnum errorCodeEnum = Optional.of(token)
                 .filter(t -> !t.isEmpty()) // Check if token is not empty
-                .map(t -> resolveErrorCode(errorCodeRepository, TOKEN_GENERATE_SUCCESS))
+                .map(t -> TOKEN_GENERATE_SUCCESS)
                 .orElseGet(() -> {
                     log.error("There is an error generating token!");
-                    return resolveErrorCode(errorCodeRepository, TOKEN_GENERATE_FAIL);
+                    return TOKEN_GENERATE_FAIL;
                 });
-        ErrorCodeEnum errorCodeEnum = Objects.equals(errorCode, TOKEN_GENERATE_SUCCESS.getCode()) ? TOKEN_GENERATE_SUCCESS : TOKEN_GENERATE_FAIL;
-        return getCompleteResponse(errorCodeRepository, errorCode, errorCodeEnum.name(), Token.name(), token);
+
+        return getCompleteResponse(errorCodeRepository, errorCodeEnum, Token.name(), token);
     }
 
     @Override
@@ -79,7 +78,7 @@ public class TokenServiceImpl implements TokenService {
         log.info("Start refreshing token!");
         // Checking if the request has the authorization header
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name());
+            return getCompleteResponse(errorCodeRepository, TOKEN_VERIFY_FAIL, Token.name(), null);
         }
         String token = authorizationHeader.substring(7);
         String validateTokenCode = validateToken(token).getResponseBody().getCode();
@@ -91,11 +90,11 @@ public class TokenServiceImpl implements TokenService {
         }
         log.warn("Token validation failed for reason: {}", validateTokenCode);
         if (validateTokenCode.equals(USER_NOT_FOUND.getCode())) {
-            return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, USER_NOT_FOUND), Token.name());
+            return getCompleteResponse(errorCodeRepository, USER_NOT_FOUND, Token.name(), null);
         } else if (validateTokenCode.equals(TOKEN_EXPIRE.getCode())) {
-            return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_EXPIRE), Token.name());
+            return getCompleteResponse(errorCodeRepository, TOKEN_EXPIRE, Token.name(), null);
         } else {
-            return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name());
+            return getCompleteResponse(errorCodeRepository, TOKEN_VERIFY_FAIL, Token.name(), null);
         }
     }
 
@@ -119,14 +118,14 @@ public class TokenServiceImpl implements TokenService {
             userOptional = userRepository.findByPhoneNumberAndStatus(phoneNumber, true);
             if (userOptional.isEmpty()) {
                 log.info("There is no user with phone number {}", phoneNumber);
-                getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, USER_NOT_FOUND), Token.name());
+                getCompleteResponse(errorCodeRepository, USER_NOT_FOUND, Token.name(), null);
             }
         } catch (ExpiredJwtException e) {
-            log.info("Token expires!");
-            return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_EXPIRE), Token.name());
+            log.error("Token expires!");
+            throw new BusinessException(ErrorCodeEnum.TOKEN_EXPIRE, Token.name());
         } catch (Exception e) {
-            log.info("Token verification failed!");
-            return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name());
+            log.error("Token verification failed!");
+            throw new BusinessException(ErrorCodeEnum.TOKEN_VERIFY_FAIL, Token.name());
         }
 
         log.info("The token is valid for userID {}", phoneNumber);
@@ -135,7 +134,7 @@ public class TokenServiceImpl implements TokenService {
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 user, user.getPhoneNumber(), user.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_SUCCESS), TOKEN_VERIFY_SUCCESS.name(), Token.name(), claims);
+        return getCompleteResponse(errorCodeRepository, TOKEN_VERIFY_SUCCESS, Token.name(), claims);
     }
 
     // Method to get the SECRET key dynamically

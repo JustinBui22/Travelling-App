@@ -1,11 +1,12 @@
 package com.example.travelingapp.security.filter;
 
 import com.example.travelingapp.entity.User;
+import com.example.travelingapp.exception_handler.exception.BusinessException;
 import com.example.travelingapp.repository.ConfigurationRepository;
 import com.example.travelingapp.repository.ErrorCodeRepository;
 import com.example.travelingapp.repository.UserRepository;
 import com.example.travelingapp.service.impl.TokenServiceImpl;
-import com.example.travelingapp.util.CompleteResponse;
+import com.example.travelingapp.response_template.CompleteResponse;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,11 +27,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
-import static com.example.travelingapp.util.CompleteResponse.getCompleteResponse;
-import static com.example.travelingapp.util.common.Common.getNonAuthenticatedUrls;
-import static com.example.travelingapp.util.common.DataConverter.convertStringToLong;
-import static com.example.travelingapp.util.common.DataConverter.toJson;
-import static com.example.travelingapp.util.common.ErrorCodeResolver.resolveErrorCode;
+import static com.example.travelingapp.response_template.CompleteResponse.getCompleteResponse;
+import static com.example.travelingapp.util.Common.getNonAuthenticatedUrls;
+import static com.example.travelingapp.util.DataConverter.convertStringToLong;
+import static com.example.travelingapp.util.DataConverter.toJson;
 
 @Log4j2
 @Component
@@ -53,7 +53,6 @@ public class TokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        log.info("Start validating token!");
         // Skip token validation for non-authenticated URLs
         if (Arrays.stream(getNonAuthenticatedUrls(configurationRepository))
                 .anyMatch(nonAuthenticatedUrl -> request.getRequestURI().equals(nonAuthenticatedUrl))) {
@@ -92,20 +91,19 @@ public class TokenFilter extends OncePerRequestFilter {
                     filterChain.doFilter(request, response);  // Allow the request to proceed
                     return;
                 }
-
                 if (responseCode.equals(USER_NOT_FOUND.getCode())) {
-                    response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, USER_NOT_FOUND), Token.name())));
+                    response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, USER_NOT_FOUND, Token.name(), null)));
                 } else if (responseCode.equals(TOKEN_EXPIRE.getCode())) {
-                    response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_EXPIRE), Token.name())));
+                    response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, TOKEN_EXPIRE, Token.name(), null)));
                 } else {
-                    response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, resolveErrorCode(errorCodeRepository, TOKEN_VERIFY_FAIL), Token.name())));
+                    response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, TOKEN_VERIFY_FAIL, Token.name(), null)));
                 }
                 log.warn("Token validation failed for reason: {}", responseCode);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.flushBuffer();
             } catch (Exception e) {
                 log.error("There has been an error in {}!", this.getClass(), e);
-                throw new RuntimeException(e);
+                throw new BusinessException(INTERNAL_SERVER_ERROR, Common.name());
             }
             // For request that need authorization but does not have it
             filterChain.doFilter(request, response);
