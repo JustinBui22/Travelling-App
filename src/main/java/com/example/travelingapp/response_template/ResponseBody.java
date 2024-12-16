@@ -19,13 +19,4 @@ public final class ResponseBody<T> {
         this.flow = flow;
         this.body = body;
     }
-
-    public ResponseBody(String code, String message, T body) {
-        this.code = code;
-        this.message = message;
-        this.body = body;
-    }
-
-    public ResponseBody() {
-    }
 }

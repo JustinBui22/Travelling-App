@@ -1,6 +1,5 @@
 package com.example.travelingapp.exception_handler;
 
-import com.example.travelingapp.entity.ErrorCode;
 import com.example.travelingapp.exception_handler.exception.BusinessException;
 import com.example.travelingapp.repository.ErrorCodeRepository;
 import com.example.travelingapp.response_template.CompleteResponse;
