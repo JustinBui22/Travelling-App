@@ -1,4 +1,4 @@
-package com.example.travelingapp.util;
+package com.example.travelingapp.response_template;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -24,5 +24,8 @@ public final class ResponseBody<T> {
         this.code = code;
         this.message = message;
         this.body = body;
+    }
+
+    public ResponseBody() {
     }
 }

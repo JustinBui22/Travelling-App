@@ -1,4 +1,4 @@
-package com.example.travelingapp.util.common;
+package com.example.travelingapp.util;
 
 import java.time.LocalDate;
 

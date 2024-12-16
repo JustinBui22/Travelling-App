@@ -11,5 +11,5 @@ public interface ErrorCodeRepository extends JpaRepository<ErrorCode, Integer> {
 
     Optional<ErrorCode> findByErrorCodeAndFlow(String errorCode, String flow);
     Optional<ErrorCode> findByErrorCodeAndErrorEnumAndFlow(String errorCode, String errorEnum, String flow);
-    Optional<ErrorCode> findByErrorEnum(String httpStatus);
+    Optional<ErrorCode> findByErrorEnumAndFlow(String errorEnum, String flow);
 }

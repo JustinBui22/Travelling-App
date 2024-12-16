@@ -1,6 +1,6 @@
 package com.example.travelingapp.controller;
 
-import com.example.travelingapp.util.ResponseBody;
+import com.example.travelingapp.response_template.ResponseBody;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

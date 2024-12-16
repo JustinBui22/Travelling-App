@@ -1,7 +1,7 @@
 package com.example.travelingapp.service.impl;
 
 import com.example.travelingapp.service.SmsService;
-import com.example.travelingapp.util.ResponseBody;
+import com.example.travelingapp.response_template.ResponseBody;
 import org.springframework.stereotype.Service;
 
 @Service

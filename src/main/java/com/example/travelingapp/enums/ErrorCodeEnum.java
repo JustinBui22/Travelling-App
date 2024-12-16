@@ -1,7 +1,11 @@
 package com.example.travelingapp.enums;
 
+import com.example.travelingapp.entity.ErrorCode;
+import com.example.travelingapp.exception_handler.exception.BusinessException;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
+
+import java.util.Optional;
 
 import static com.example.travelingapp.enums.CommonEnum.*;
 
@@ -27,7 +31,8 @@ public enum ErrorCodeEnum {
     USERNAME_FORMAT_INVALID("E013", "Username format invalid", Register, HttpStatusCodeEnum.USERNAME_FORMAT_INVALID),
     TOKEN_GENERATE_FAIL("E014", "Token generate fail", Token, HttpStatusCodeEnum.TOKEN_GENERATE_FAIL),
     TOKEN_VERIFY_FAIL("E015", "Token verify fail", Token, HttpStatusCodeEnum.TOKEN_VERIFY_FAIL),
-    TOKEN_EXPIRE("E016", "Token expires", Token, HttpStatusCodeEnum.TOKEN_EXPIRE);
+    TOKEN_EXPIRE("E016", "Token expires", Token, HttpStatusCodeEnum.TOKEN_EXPIRE),
+    INTERNAL_SERVER_ERROR("E017", "Internal server error", Common, HttpStatusCodeEnum.INTERNAL_SERVER_ERROR),;
 
 
     private final String code;
@@ -42,18 +47,47 @@ public enum ErrorCodeEnum {
         this.httpStatusCodeEnum = httpStatusCodeEnum;
     }
 
-    public static HttpStatusCodeEnum getHttpFromErrorCode(String errorCode) {
-        for (ErrorCodeEnum errorStatusCode : ErrorCodeEnum.values()) {
-            if (String.valueOf(errorStatusCode.getCode()).equals(errorCode)) {
-                // Http code not config with error code OR not exist yet
-                if (errorStatusCode.httpStatusCodeEnum == null || errorStatusCode.httpStatusCodeEnum == HttpStatusCodeEnum.UNDEFINED_HTTP_CODE) {
-                    log.info("Http code {} correspond with error code {} has not been defined yet!", errorStatusCode.httpStatusCodeEnum, errorCode);
-                    return HttpStatusCodeEnum.UNDEFINED_HTTP_CODE;
-                }
-                return errorStatusCode.httpStatusCodeEnum;
-            }
+    public static HttpStatusCodeEnum getHttpFromErrorCode(ErrorCode errorCode) {
+        if (errorCode == null) {
+            log.info("Error code is null, returning undefined HTTP status code.");
+            return UNDEFINED_HTTP_CODE.getHttpStatusCodeEnum();
         }
-        log.info("Error code {} has not been defined yet!", errorCode);
-        return HttpStatusCodeEnum.UNDEFINED_ERROR_CODE;
+        try {
+            // Map the HTTP code using the ErrorCode object
+            return HttpStatusCodeEnum.valueOf(errorCode.getHttpCode());
+        } catch (IllegalArgumentException e) {
+            // Log and return default if mapping fails
+            log.error("Http code {} correspond with error code {} has not been defined yet!",
+                    errorCode.getHttpCode(), errorCode.getErrorEnum());
+            throw new BusinessException(UNDEFINED_HTTP_CODE, Common.name());
+        }
+    }
+
+    public static String getErrorCode(ErrorCode errorCode) {
+        if (errorCode == null) {
+            log.info("Error code is null, returning undefined error code.");
+            return UNDEFINED_ERROR_CODE.getCode();
+        }
+        try {
+            return errorCode.getErrorCode();
+        } catch (IllegalArgumentException e) {
+            log.error("There is no config value of error code for {}!",
+                    errorCode.getErrorEnum());
+            throw new BusinessException(UNDEFINED_ERROR_CODE, Common.name());
+        }
+    }
+
+    public static String getErrorCodeMessage(ErrorCode errorCode) {
+        if (errorCode == null) {
+            log.info("Error code message is null, returning undefined error code message.");
+            return UNDEFINED_ERROR_CODE.getMessage();
+        }
+        try {
+            return errorCode.getErrorMessage();
+        } catch (IllegalArgumentException e) {
+            log.error("There is no config value of error code message for {}",
+                    errorCode.getErrorEnum());
+            throw new BusinessException(UNDEFINED_ERROR_CODE, Common.name());
+        }
     }
 }

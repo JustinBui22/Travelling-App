@@ -3,15 +3,17 @@ package com.example.travelingapp.service.impl;
 import com.example.travelingapp.dto.LoginDTO;
 import com.example.travelingapp.entity.Sms;
 import com.example.travelingapp.entity.User;
+import com.example.travelingapp.enums.ErrorCodeEnum;
 import com.example.travelingapp.enums.HttpStatusCodeEnum;
 import com.example.travelingapp.enums.SmsEnum;
+import com.example.travelingapp.exception_handler.exception.BusinessException;
 import com.example.travelingapp.repository.ConfigurationRepository;
 import com.example.travelingapp.repository.ErrorCodeRepository;
 import com.example.travelingapp.repository.SmsRepository;
 import com.example.travelingapp.service.UserService;
 import com.example.travelingapp.dto.UserDTO;
-import com.example.travelingapp.util.CompleteResponse;
-import com.example.travelingapp.util.ResponseBody;
+import com.example.travelingapp.response_template.CompleteResponse;
+import com.example.travelingapp.response_template.ResponseBody;
 import lombok.extern.log4j.Log4j2;
 import com.example.travelingapp.repository.UserRepository;
 
@@ -27,10 +29,9 @@ import java.util.Optional;
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
 import static com.example.travelingapp.security.data_security.DataAesAlgorithm.encryptData;
-import static com.example.travelingapp.util.CompleteResponse.getCompleteResponse;
-import static com.example.travelingapp.util.common.DateTimeFormatter.toLocalDate;
+import static com.example.travelingapp.response_template.CompleteResponse.getCompleteResponse;
+import static com.example.travelingapp.util.DateTimeFormatter.toLocalDate;
 import static com.example.travelingapp.Validator.InputValidator.*;
-import static com.example.travelingapp.util.common.ErrorCodeResolver.resolveErrorCode;
 
 @Service
 @Log4j2
@@ -54,37 +55,37 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CompleteResponse<Object> createNewUserByPhoneNumber(UserDTO registerRequest) {
-        String errorCode;
+        ErrorCodeEnum errorCodeEnum;
         Optional<User> user = userRepository.findByUsername(registerRequest.getUsername());
 
         try {
             if (!validateUsername(registerRequest.getUsername(), configurationRepository.findByConfigCode(USERNAME_PATTERN.name()))) {
                 log.info("Username format is invalid!");
-                errorCode = resolveErrorCode(errorCodeRepository, USERNAME_FORMAT_INVALID);
+                errorCodeEnum = USERNAME_FORMAT_INVALID;
             }
             // Check if username is taken
             else if (user.isPresent()) {
                 log.info("Username {} is already taken!", user.get().getUsername());
-                errorCode = resolveErrorCode(errorCodeRepository, USERNAME_TAKEN);
+                errorCodeEnum = USERNAME_TAKEN;
             }
             // Check if email is inputted and has valid form and if taken
             else if (!registerRequest.getEmail().isEmpty()
                     && !validateEmailForm(registerRequest.getEmail(), configurationRepository.findByConfigCode(EMAIL_PATTERN.name()))) {
                 log.info("Email format is invalid");
-                errorCode = resolveErrorCode(errorCodeRepository, EMAIL_PATTERN_INVALID);
+                errorCodeEnum = EMAIL_PATTERN_INVALID;
             } else if (!registerRequest.getEmail().isEmpty() && userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
                 log.info("Email is already taken!");
-                errorCode = resolveErrorCode(errorCodeRepository, EMAIL_TAKEN);
+                errorCodeEnum = EMAIL_TAKEN;
             }
             // Check if the password meets the security requirement
             else if (!validatePassword(registerRequest.getPassword(), configurationRepository.findByConfigCode(PASSWORD_PATTERN.name()))) {
                 log.info("Password created is weak!");
-                errorCode = resolveErrorCode(errorCodeRepository, PASSWORD_NOT_QUALIFIED);
+                errorCodeEnum = PASSWORD_NOT_QUALIFIED;
             }
             // Check if the phone number has a correct format
             else if (!validatePhoneForm(registerRequest.getPhoneNumber(), configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()))) {
                 log.info("Phone format is invalid");
-                errorCode = resolveErrorCode(errorCodeRepository, PHONE_FORMAT_INVALID);
+                errorCodeEnum = PHONE_FORMAT_INVALID;
             } else {
                 // Get sms config for sms otp verification
                 Optional<Sms> registerSmsOptional = smsRepository.findBySmsCodeAndSmsFlow(SmsEnum.SMS_OTP_REGISTER.getCode(), Register.name());
@@ -97,16 +98,16 @@ public class UserServiceImpl implements UserService {
                             registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true);
                     userRepository.save(newUser);
                     log.info("User has been created!");
-                    errorCode = resolveErrorCode(errorCodeRepository, USER_CREATED);
+                    errorCodeEnum = USER_CREATED;
                 } else {
                     log.info("There is no config for sms {} for {} flow!", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
-                    errorCode = resolveErrorCode(errorCodeRepository, SMS_NOT_CONFIG);
+                    errorCodeEnum = SMS_NOT_CONFIG;
                 }
             }
-            return getCompleteResponse(errorCodeRepository, errorCode, Register.name());
+            return getCompleteResponse(errorCodeRepository, errorCodeEnum, Register.name(), null);
         } catch (Exception e) {
             log.error("There has been an error in registering a new user!", e);
-            throw new RuntimeException(e);
+            throw new BusinessException(INTERNAL_SERVER_ERROR, Common.name());
         }
     }
 
@@ -119,7 +120,7 @@ public class UserServiceImpl implements UserService {
     public CompleteResponse<Object> login(LoginDTO loginRequest) {
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
-        String errorCode;
+        ErrorCodeEnum errorCodeEnum;
         // Validate if the username is a phone number
         boolean isPhoneNumber = validatePhoneForm(
                 username,
@@ -133,14 +134,14 @@ public class UserServiceImpl implements UserService {
             // Handle user not found
             if (userOptional.isEmpty()) {
                 log.info("User {} not found!", username);
-                errorCode = resolveErrorCode(errorCodeRepository, USER_NOT_FOUND);
+                errorCodeEnum = USER_NOT_FOUND;
             } else {
                 User user = userOptional.get();
                 // check if password matches and display corresponding error code.
                 boolean isPasswordCorrect = encryptData(password).equals(user.getPassword());
-                errorCode = isPasswordCorrect
-                        ? resolveErrorCode(errorCodeRepository, LOGIN_SUCCESS)
-                        : resolveErrorCode(errorCodeRepository, PASSWORD_NOT_CORRECT);
+                errorCodeEnum = isPasswordCorrect
+                        ? LOGIN_SUCCESS
+                        : PASSWORD_NOT_CORRECT;
                 log.info(encryptData(password).equals(user.getPassword())
                         ? "User {} logged in successfully!"
                         : "Password incorrect!", username);
@@ -159,13 +160,13 @@ public class UserServiceImpl implements UserService {
                     }
                     // Generate and return the JWT token
                     String token = tokenServiceImpl.generateToken(username).getResponseBody().getBody().toString();
-                    return getCompleteResponse(errorCodeRepository, errorCode, LOGIN_SUCCESS.name(), Login.name(), token);
+                    return getCompleteResponse(errorCodeRepository, errorCodeEnum, Login.name(), token);
                 }
             }
-            return getCompleteResponse(errorCodeRepository, errorCode, Login.name());
+            return getCompleteResponse(errorCodeRepository, errorCodeEnum, Login.name(), null);
         } catch (Exception e) {
             log.error("There has been an error in logging in for user {}!", username, e);
-            throw new RuntimeException(e);
+            throw new BusinessException(INTERNAL_SERVER_ERROR, Common.name());
         }
     }
 

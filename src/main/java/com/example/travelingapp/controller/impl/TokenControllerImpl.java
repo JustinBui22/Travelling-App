@@ -2,8 +2,8 @@ package com.example.travelingapp.controller.impl;
 
 import com.example.travelingapp.controller.TokenController;
 import com.example.travelingapp.service.TokenService;
-import com.example.travelingapp.util.CompleteResponse;
-import com.example.travelingapp.util.ResponseBody;
+import com.example.travelingapp.response_template.CompleteResponse;
+import com.example.travelingapp.response_template.ResponseBody;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;

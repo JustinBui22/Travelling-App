@@ -2,7 +2,7 @@ package com.example.travelingapp.service;
 
 import com.example.travelingapp.dto.LoginDTO;
 import com.example.travelingapp.dto.UserDTO;
-import com.example.travelingapp.util.CompleteResponse;
+import com.example.travelingapp.response_template.CompleteResponse;
 
 public interface UserService {
     CompleteResponse<Object> createNewUserByPhoneNumber(UserDTO registerRequest);
