@@ -1,7 +1,5 @@
 package com.example.travelingapp.enums;
 
-import com.example.travelingapp.entity.ErrorCode;
-import com.example.travelingapp.exception_handler.exception.BusinessException;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 
@@ -31,7 +29,9 @@ public enum ErrorCodeEnum {
     TOKEN_GENERATE_FAIL("E014", "Token generate fail", Token, HttpStatusCodeEnum.TOKEN_GENERATE_FAIL),
     TOKEN_VERIFY_FAIL("E015", "Token verify fail", Token, HttpStatusCodeEnum.TOKEN_VERIFY_FAIL),
     TOKEN_EXPIRE("E016", "Token expires", Token, HttpStatusCodeEnum.TOKEN_EXPIRE),
-    INTERNAL_SERVER_ERROR("E017", "Internal server error", Common, HttpStatusCodeEnum.INTERNAL_SERVER_ERROR),;
+    INTERNAL_SERVER_ERROR("E017", "Internal server error", Common, HttpStatusCodeEnum.INTERNAL_SERVER_ERROR),
+    CONFIG_NOT_FOUND("E018", "Config not found", Common, HttpStatusCodeEnum.CONFIG_NOT_FOUND),
+    ;
 
 
     private final String code;
@@ -44,49 +44,5 @@ public enum ErrorCodeEnum {
         this.message = message;
         this.flow = flow;
         this.httpStatusCodeEnum = httpStatusCodeEnum;
-    }
-
-    public static HttpStatusCodeEnum getHttpFromErrorCode(ErrorCode errorCode) {
-        if (errorCode == null) {
-            log.info("Error code is null, returning undefined HTTP status code.");
-            return UNDEFINED_HTTP_CODE.getHttpStatusCodeEnum();
-        }
-        try {
-            // Map the HTTP code using the ErrorCode object
-            return HttpStatusCodeEnum.valueOf(errorCode.getHttpCode());
-        } catch (IllegalArgumentException e) {
-            // Log and return default if mapping fails
-            log.error("Http code {} correspond with error code {} has not been defined yet!",
-                    errorCode.getHttpCode(), errorCode.getErrorEnum());
-            throw new BusinessException(UNDEFINED_HTTP_CODE, Common.name());
-        }
-    }
-
-    public static String getErrorCode(ErrorCode errorCode) {
-        if (errorCode == null) {
-            log.info("Error code is null, returning undefined error code.");
-            return UNDEFINED_ERROR_CODE.getCode();
-        }
-        try {
-            return errorCode.getErrorCode();
-        } catch (IllegalArgumentException e) {
-            log.error("There is no config value of error code for {}!",
-                    errorCode.getErrorEnum());
-            throw new BusinessException(UNDEFINED_ERROR_CODE, Common.name());
-        }
-    }
-
-    public static String getErrorCodeMessage(ErrorCode errorCode) {
-        if (errorCode == null) {
-            log.info("Error code message is null, returning undefined error code message.");
-            return UNDEFINED_ERROR_CODE.getMessage();
-        }
-        try {
-            return errorCode.getErrorMessage();
-        } catch (IllegalArgumentException e) {
-            log.error("There is no config value of error code message for {}",
-                    errorCode.getErrorEnum());
-            throw new BusinessException(UNDEFINED_ERROR_CODE, Common.name());
-        }
     }
 }

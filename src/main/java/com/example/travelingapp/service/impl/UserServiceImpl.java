@@ -4,7 +4,6 @@ import com.example.travelingapp.dto.LoginDTO;
 import com.example.travelingapp.entity.Sms;
 import com.example.travelingapp.entity.User;
 import com.example.travelingapp.enums.ErrorCodeEnum;
-import com.example.travelingapp.enums.HttpStatusCodeEnum;
 import com.example.travelingapp.enums.SmsEnum;
 import com.example.travelingapp.exception_handler.exception.BusinessException;
 import com.example.travelingapp.repository.ConfigurationRepository;
@@ -13,7 +12,6 @@ import com.example.travelingapp.repository.SmsRepository;
 import com.example.travelingapp.service.UserService;
 import com.example.travelingapp.dto.UserDTO;
 import com.example.travelingapp.response_template.CompleteResponse;
-import com.example.travelingapp.response_template.ResponseBody;
 import lombok.extern.log4j.Log4j2;
 import com.example.travelingapp.repository.UserRepository;
 
@@ -22,13 +20,13 @@ import java.time.LocalDate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
-import static com.example.travelingapp.security.data_security.DataAesAlgorithm.encryptData;
 import static com.example.travelingapp.response_template.CompleteResponse.getCompleteResponse;
 import static com.example.travelingapp.util.DateTimeFormatter.toLocalDate;
 import static com.example.travelingapp.Validator.InputValidator.*;
@@ -42,15 +40,17 @@ public class UserServiceImpl implements UserService {
     private final SmsServiceImpl smsServiceImpl;
     private final ErrorCodeRepository errorCodeRepository;
     private final TokenServiceImpl tokenServiceImpl;
+    private final PasswordEncoder passwordEncoder;
 
 
-    public UserServiceImpl(UserRepository userRepository, ConfigurationRepository configurationRepository, SmsRepository smsRepository, SmsServiceImpl smsServiceImpl, ErrorCodeRepository errorCodeRepository, TokenServiceImpl tokenServiceImpl) {
+    public UserServiceImpl(UserRepository userRepository, ConfigurationRepository configurationRepository, SmsRepository smsRepository, SmsServiceImpl smsServiceImpl, ErrorCodeRepository errorCodeRepository, TokenServiceImpl tokenServiceImpl, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.configurationRepository = configurationRepository;
         this.smsRepository = smsRepository;
         this.smsServiceImpl = smsServiceImpl;
         this.errorCodeRepository = errorCodeRepository;
         this.tokenServiceImpl = tokenServiceImpl;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -69,8 +69,7 @@ public class UserServiceImpl implements UserService {
                 errorCodeEnum = USERNAME_TAKEN;
             }
             // Check if email is inputted and has valid form and if taken
-            else if (!registerRequest.getEmail().isEmpty()
-                    && !validateEmailForm(registerRequest.getEmail(), configurationRepository.findByConfigCode(EMAIL_PATTERN.name()))) {
+            else if (!registerRequest.getEmail().isEmpty() && !validateEmailForm(registerRequest.getEmail(), configurationRepository.findByConfigCode(EMAIL_PATTERN.name()))) {
                 log.info("Email format is invalid");
                 errorCodeEnum = EMAIL_PATTERN_INVALID;
             } else if (!registerRequest.getEmail().isEmpty() && userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
@@ -94,8 +93,7 @@ public class UserServiceImpl implements UserService {
                     log.info("Start sending sms {} for otp verification in {} flow !", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
                     smsServiceImpl.sendSms(registerRequest.getPhoneNumber(), registerMessage);
 
-                    User newUser = new User(registerRequest.getUsername(), encryptData(registerRequest.getPassword()),
-                            registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true);
+                    User newUser = new User(registerRequest.getUsername(), passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true);
                     userRepository.save(newUser);
                     log.info("User has been created!");
                     errorCodeEnum = USER_CREATED;
@@ -119,17 +117,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public CompleteResponse<Object> login(LoginDTO loginRequest) {
         String username = loginRequest.getUsername();
-        String password = loginRequest.getPassword();
         ErrorCodeEnum errorCodeEnum;
         // Validate if the username is a phone number
-        boolean isPhoneNumber = validatePhoneForm(
-                username,
-                configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name())
-        );
+        boolean isPhoneNumber = validatePhoneForm(username, configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()));
         // Retrieve the user based on username type (phone number or normal username)
-        Optional<User> userOptional = isPhoneNumber ?
-                userRepository.findByPhoneNumberAndStatus(username, true) :
-                userRepository.findByUsername(username);
+        Optional<User> userOptional = isPhoneNumber ? userRepository.findByPhoneNumberAndStatus(username, true) : userRepository.findByUsername(username);
         try {
             // Handle user not found
             if (userOptional.isEmpty()) {
@@ -138,20 +130,15 @@ public class UserServiceImpl implements UserService {
             } else {
                 User user = userOptional.get();
                 // check if password matches and display corresponding error code.
-                boolean isPasswordCorrect = encryptData(password).equals(user.getPassword());
-                errorCodeEnum = isPasswordCorrect
-                        ? LOGIN_SUCCESS
-                        : PASSWORD_NOT_CORRECT;
-                log.info(encryptData(password).equals(user.getPassword())
-                        ? "User {} logged in successfully!"
-                        : "Password incorrect!", username);
+                boolean isPasswordCorrect = passwordEncoder.matches(passwordEncoder.encode(loginRequest.getPassword()), user.getPassword());
+                errorCodeEnum = isPasswordCorrect ? LOGIN_SUCCESS : PASSWORD_NOT_CORRECT;
+                log.info(isPasswordCorrect ? "User {} logged in successfully!" : "Password incorrect!", username);
 
                 // Establishes the authentication context for the session after successful login.
                 if (isPasswordCorrect) {
                     log.info("Current user: {}", user.getPhoneNumber());
                     // Create an authentication object from the user
-                    Authentication authentication = new UsernamePasswordAuthenticationToken(
-                            user, user.getPhoneNumber(), user.getAuthorities());
+                    Authentication authentication = new UsernamePasswordAuthenticationToken(user, user.getPhoneNumber(), user.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
                     // Change userName to phoneNumber
@@ -172,7 +159,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CompleteResponse<Object> test(String input) {
-        return new CompleteResponse<>(new ResponseBody<>(null, null, null, encryptData(input)), HttpStatusCodeEnum.OK.value());
-
+        return getCompleteResponse(errorCodeRepository, LOGIN_SUCCESS, Test.name(), passwordEncoder.encode(input));
     }
 }
