@@ -13,7 +13,7 @@ import lombok.Setter;
 @Getter
 @Valid
 public class UserDTO {
-    @NotBlank(message = "Username cannot be null or empty")
+    @NotBlank(message = "Username  cannotbe null or empty")
     @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
     private String username;
 
