@@ -10,8 +10,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 
-
-import java.util.List;
 import java.util.Optional;
 
 import static com.example.travelingapp.enums.ErrorCodeEnum.CONFIG_NOT_FOUND;
