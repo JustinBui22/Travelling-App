@@ -5,6 +5,7 @@ import lombok.Getter;
 @Getter
 public enum CommonEnum {
 
+    Test(Group.Flow),
     Register(Group.Flow),
     Login(Group.Flow),
     Common(Group.Flow),

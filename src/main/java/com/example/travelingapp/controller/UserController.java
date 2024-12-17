@@ -19,5 +19,5 @@ public interface UserController {
     ResponseEntity<ResponseBody<Object>> login(@Valid @RequestBody LoginDTO loginRequest);
 
     @GetMapping("/test")
-    ResponseEntity<ResponseBody<Object>> test(@RequestParam String password);
+    ResponseEntity<ResponseBody<Object>> test(@RequestParam(name = "password") String password);
 }
