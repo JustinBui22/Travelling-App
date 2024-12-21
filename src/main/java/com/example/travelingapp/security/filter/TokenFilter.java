@@ -68,7 +68,7 @@ public class TokenFilter extends OncePerRequestFilter {
                     Claims claims = (Claims) validateTokenResponse.getResponseBody().getBody();
                     User user = userRepository.findByPhoneNumberAndStatus(claims.getSubject(), true).get();
                     Authentication authentication = new UsernamePasswordAuthenticationToken(
-                            user, user.getPhoneNumber(), user.getAuthorities());
+                            user, user.getUsername(), user.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
                     // Check if the token is nearing expiration (fallback mechanism)
@@ -81,7 +81,7 @@ public class TokenFilter extends OncePerRequestFilter {
                             });
                     if (currentTokenTimeLeft < requiredTokenRefreshTime) {
                         String refreshedToken = (String) (tokenServiceImpl.generateJwtToken((String) SecurityContextHolder.getContext().getAuthentication().getCredentials()).getResponseBody().getBody());
-                        response.setHeader("Authorization", "Bearer " + refreshedToken); // Send new token in response
+                        response.setHeader("X-Refresh-Token", "Bearer " + refreshedToken); // Send new token in response
                     }
                     filterChain.doFilter(request, response);  // Allow the request to proceed
                     return;
@@ -93,8 +93,6 @@ public class TokenFilter extends OncePerRequestFilter {
                 } else if (responseCode.equals(TOKEN_EXPIRE.getCode())) {
                     throw new BusinessException(TOKEN_EXPIRE, Token.name());
                 } else {
-                    // response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, TOKEN_VERIFY_FAIL, Token.name(), null)));
-                    // response.flushBuffer();
                     throw new BusinessException(TOKEN_VERIFY_FAIL, Token.name());
                 }
             } catch (Exception e) {
