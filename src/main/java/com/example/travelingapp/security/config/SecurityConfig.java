@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -22,6 +24,7 @@ public class SecurityConfig {
         this.configurationRepository = configurationRepository;
     }
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, TokenFilter tokenFilter, Environment environment) throws Exception {
         String contextPath = environment.getProperty("server.servlet.context-path", "/The-Project");
@@ -32,15 +35,28 @@ public class SecurityConfig {
                     // Permit the non-authenticated URLs dynamically
                     Arrays.stream(getNonAuthenticatedUrls(configurationRepository))
                             .forEach(url -> auth.requestMatchers(url.replaceFirst("^" + contextPath, "")).permitAll());
-//                    auth.requestMatchers("/users/register/phone").permitAll();
                     auth.anyRequest().authenticated();
                 })
-                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class); // Add the token filter
-//                .oauth2Login(oauth2 -> oauth2
-//                        .defaultSuccessUrl("/welcome", true)
-//                        .failureUrl("/login?error")
-//                );
+//                .formLogin().disable()
+//                .logout(logout -> logout
+//                        .logoutUrl("/logout")
+//                        .invalidateHttpSession(true)
+//                        .deleteCookies("JSESSIONID")
+//                )
+//                .sessionManagement(session -> session
+//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Use stateless session management for JWT
+//                )
+                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class) // Add the token filter
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("/welcome", true)
+                        .failureUrl("/login?error")
+                );
         return http.build();
+    }
+
+    @Bean
+    public SessionRegistryImpl sessionRegistry() {
+        return new SessionRegistryImpl();
     }
 }
 

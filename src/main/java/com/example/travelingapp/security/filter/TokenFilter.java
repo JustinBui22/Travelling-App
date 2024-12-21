@@ -27,23 +27,19 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
-import static com.example.travelingapp.response_template.CompleteResponse.getCompleteResponse;
 import static com.example.travelingapp.util.Common.getNonAuthenticatedUrls;
 import static com.example.travelingapp.util.DataConverter.convertStringToLong;
-import static com.example.travelingapp.util.DataConverter.toJson;
 
 @Log4j2
 @Component
 public class TokenFilter extends OncePerRequestFilter {
 
     private final TokenServiceImpl tokenServiceImpl;
-    private final ErrorCodeRepository errorCodeRepository;
     private final ConfigurationRepository configurationRepository;
     private final UserRepository userRepository;
 
-    public TokenFilter(TokenServiceImpl tokenServiceImpl, ErrorCodeRepository errorCodeRepository, ConfigurationRepository configurationRepository, UserRepository userRepository) {
+    public TokenFilter(TokenServiceImpl tokenServiceImpl, ConfigurationRepository configurationRepository, UserRepository userRepository) {
         this.tokenServiceImpl = tokenServiceImpl;
-        this.errorCodeRepository = errorCodeRepository;
         this.configurationRepository = configurationRepository;
         this.userRepository = userRepository;
     }
@@ -55,7 +51,7 @@ public class TokenFilter extends OncePerRequestFilter {
 
         // Skip token validation for non-authenticated URLs
         if (Arrays.stream(getNonAuthenticatedUrls(configurationRepository))
-                .anyMatch(nonAuthenticatedUrl -> request.getRequestURI().equals(nonAuthenticatedUrl))) {
+                .anyMatch(nonAuthenticatedUrl -> matchesUrlPattern(nonAuthenticatedUrl, request.getRequestURI()))) {
             log.info("Skipping token validation for public URL: {}", request.getRequestURI());
             response.setStatus(HttpServletResponse.SC_OK);
             filterChain.doFilter(request, response);
@@ -65,7 +61,7 @@ public class TokenFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            CompleteResponse<Object> validateTokenResponse = tokenServiceImpl.validateToken(token);
+            CompleteResponse<Object> validateTokenResponse = tokenServiceImpl.validateJwtToken(token);
             String responseCode = validateTokenResponse.getResponseBody().getCode();
             try {
                 if (responseCode.equals(TOKEN_VERIFY_SUCCESS.getCode())) {
@@ -76,7 +72,7 @@ public class TokenFilter extends OncePerRequestFilter {
                             user, user.getPhoneNumber(), user.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    // Check if the token is nearing expiration
+                    // Check if the token is nearing expiration (fallback mechanism)
                     long currentTokenTimeLeft = claims.getExpiration().getTime() - System.currentTimeMillis();
                     long requiredTokenRefreshTime = configurationRepository.findByConfigCode(CURRENT_TOKEN_TIME_LEFT.name())
                             .map(configuration -> convertStringToLong(configuration.getConfigValue()))
@@ -85,30 +81,32 @@ public class TokenFilter extends OncePerRequestFilter {
                                 return 300000L; // default value of 5 minutes
                             });
                     if (currentTokenTimeLeft < requiredTokenRefreshTime) {
-                        String refreshedToken = (String) (tokenServiceImpl.generateToken((String) SecurityContextHolder.getContext().getAuthentication().getCredentials()).getResponseBody().getBody());
+                        String refreshedToken = (String) (tokenServiceImpl.generateJwtToken((String) SecurityContextHolder.getContext().getAuthentication().getCredentials()).getResponseBody().getBody());
                         response.setHeader("Authorization", "Bearer " + refreshedToken); // Send new token in response
                     }
                     filterChain.doFilter(request, response);  // Allow the request to proceed
                     return;
                 }
-                if (responseCode.equals(USER_NOT_FOUND.getCode())) {
-                    response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, USER_NOT_FOUND, Token.name(), null)));
-                } else if (responseCode.equals(TOKEN_EXPIRE.getCode())) {
-                    response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, TOKEN_EXPIRE, Token.name(), null)));
-                } else {
-                    response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, TOKEN_VERIFY_FAIL, Token.name(), null)));
-                }
                 log.warn("Token validation failed for reason: {}", responseCode);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.flushBuffer();
+                if (responseCode.equals(USER_NOT_FOUND.getCode())) {
+                    throw new BusinessException(USER_NOT_FOUND, Token.name());
+                } else if (responseCode.equals(TOKEN_EXPIRE.getCode())) {
+                    throw new BusinessException(TOKEN_EXPIRE, Token.name());
+                } else {
+                    // response.getWriter().print(toJson(getCompleteResponse(errorCodeRepository, TOKEN_VERIFY_FAIL, Token.name(), null)));
+                    // response.flushBuffer();
+                    throw new BusinessException(TOKEN_VERIFY_FAIL, Token.name());
+                }
             } catch (Exception e) {
                 log.error("There has been an error in {}!", this.getClass(), e);
                 throw new BusinessException(INTERNAL_SERVER_ERROR, Common.name());
             }
-            // For request that need authorization but does not have it
-            filterChain.doFilter(request, response);
         }
     }
 
+    private boolean matchesUrlPattern(String pattern, String requestURI) {
+        return requestURI.equals(pattern) || requestURI.matches(pattern.replace("**", ".*"));
+    }
 }
 
