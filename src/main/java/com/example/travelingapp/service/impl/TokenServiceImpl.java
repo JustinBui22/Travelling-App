@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Optional;
 
+import static com.example.travelingapp.Validator.InputValidator.validatePhoneForm;
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
 import static com.example.travelingapp.response_template.CompleteResponse.getCompleteResponse;
@@ -45,7 +46,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     // Generate a Bearer Token based on the user's phone number
-    public CompleteResponse<Object> generateJwtToken(String phoneNumber) {
+    public CompleteResponse<Object> generateJwtToken(String subject) {
         log.info("Start generating token!");
         Optional<Configuration> expirationTimeConfigOptional = configurationRepository.findByConfigCode(TOKEN_EXPIRATION_TIME.name());
         long expirationTime = expirationTimeConfigOptional
@@ -55,8 +56,14 @@ public class TokenServiceImpl implements TokenService {
                     return 300000L; // default value of 5 minutes
                 });
 
+        // Backup mechanism to check if username is phone number
+        if (validatePhoneForm(subject, configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()))) {
+            log.error("Input format is invalid for token generation!");
+            throw new BusinessException(ErrorCodeEnum.INPUT_FORMAT_INVALID, Token.name());
+        }
+
         String token = Jwts.builder()
-                .setSubject(phoneNumber)
+                .setSubject(subject)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSecretKey()) // Specify the signing algorithm
@@ -84,25 +91,23 @@ public class TokenServiceImpl implements TokenService {
         String validateTokenCode = validateJwtToken(token).getResponseBody().getCode();
         if (validateTokenCode.equals(TOKEN_VERIFY_SUCCESS.getCode())) {
             log.info("Token validated successfully!");
-            SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            String phoneNumber = SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
-            return generateJwtToken(phoneNumber);
+            String object = SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
+            return generateJwtToken(object);
         }
-        log.warn("Token validation failed for reason: {}", validateTokenCode);
+        log.error("Token refresh failed for reason: {}", validateTokenCode);
         if (validateTokenCode.equals(USER_NOT_FOUND.getCode())) {
-            return getCompleteResponse(errorCodeRepository, USER_NOT_FOUND, Token.name(), null);
+            throw new BusinessException(ErrorCodeEnum.USER_NOT_FOUND, Token.name());
         } else if (validateTokenCode.equals(TOKEN_EXPIRE.getCode())) {
-            return getCompleteResponse(errorCodeRepository, TOKEN_EXPIRE, Token.name(), null);
+            throw new BusinessException(ErrorCodeEnum.TOKEN_EXPIRE, Token.name());
         } else {
-            return getCompleteResponse(errorCodeRepository, TOKEN_VERIFY_FAIL, Token.name(), null);
+            throw new BusinessException(ErrorCodeEnum.TOKEN_VERIFY_FAIL, Token.name());
         }
     }
 
     // Validate the token and extract the phone number
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
     public CompleteResponse<Object> validateJwtToken(String token) {
         log.info("Start validating token!");
-        String phoneNumber;
+        String object;
         Optional<User> userOptional;
         Claims claims;
         try {
@@ -111,14 +116,14 @@ public class TokenServiceImpl implements TokenService {
                     .build()
                     .parseClaimsJws(token) // This validates the token
                     .getBody();
-            phoneNumber = claims.getSubject();
+            object = claims.getSubject();
 
             // Validate if the token's user exists
-            log.info("Start checking if user {} is registered!", phoneNumber);
-            userOptional = userRepository.findByPhoneNumberAndStatus(phoneNumber, true);
+            log.info("Start checking if user {} is registered!", object);
+            userOptional = userRepository.findByUsernameAndStatus(object, true);
             if (userOptional.isEmpty()) {
-                log.info("There is no user with phone number {}", phoneNumber);
-                getCompleteResponse(errorCodeRepository, USER_NOT_FOUND, Token.name(), null);
+                log.error("There is no user as {}", object);
+                throw new BusinessException(ErrorCodeEnum.USER_NOT_FOUND, Token.name());
             }
         } catch (ExpiredJwtException e) {
             log.error("Token expires!");
@@ -128,11 +133,11 @@ public class TokenServiceImpl implements TokenService {
             throw new BusinessException(ErrorCodeEnum.TOKEN_VERIFY_FAIL, Token.name());
         }
 
-        log.info("The token is valid for userID {}", phoneNumber);
+        log.info("The token is valid for user {}", object);
         // Populate SecurityContext with authenticated user
         User user = userOptional.get();
         Authentication authentication = new UsernamePasswordAuthenticationToken(
-                user, user.getPhoneNumber(), user.getAuthorities());
+                user, user.getUsername(), user.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return getCompleteResponse(errorCodeRepository, TOKEN_VERIFY_SUCCESS, Token.name(), claims);
     }

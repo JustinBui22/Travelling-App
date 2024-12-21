@@ -70,6 +70,16 @@ public class User implements Serializable, UserDetails {
         this.isOAuth2 = isOAuth2;
     }
 
+    public User(String username, String password, LocalDate dob, LocalDate createdDate, String email, boolean status, boolean isOAuth2) {
+        this.username = username;
+        this.password = password;
+        this.dob = dob;
+        this.createdDate = createdDate;
+        this.email = email;
+        this.status = status;
+        this.isOAuth2 = isOAuth2;
+    }
+
     public User() {
 
     }

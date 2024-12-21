@@ -20,6 +20,8 @@ public enum HttpStatusCodeEnum {
     TOKEN_GENERATE_FAIL(611, Series.ERROR, "Token generated fail"),
     TOKEN_VERIFY_FAIL(612, Series.ERROR, "Token verified fail"),
     TOKEN_EXPIRE(613, Series.ERROR, "Token expires"),
+    INPUT_FORMAT_INVALID(614, Series.ERROR, "Input format invalid"),
+    OTP_VERIFICATION_FAIL(615, Series.ERROR, "OTP code verification fail"),
 
     CONTINUE(100, HttpStatusCodeEnum.Series.INFORMATIONAL, "Continue"),
     SWITCHING_PROTOCOLS(101, HttpStatusCodeEnum.Series.INFORMATIONAL, "Switching Protocols"),

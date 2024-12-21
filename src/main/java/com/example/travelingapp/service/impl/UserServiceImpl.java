@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CompleteResponse<Object> createNewUserByPhoneNumber(UserDTO registerRequest) {
+    public CompleteResponse<Object> createNewUser(UserDTO registerRequest) {
         ErrorCodeEnum errorCodeEnum;
         Optional<User> user = userRepository.findByUsername(registerRequest.getUsername());
 
@@ -82,31 +82,49 @@ public class UserServiceImpl implements UserService {
                 errorCodeEnum = PASSWORD_NOT_QUALIFIED;
             }
             // Check if the phone number has a correct format
-            else if (!validatePhoneForm(registerRequest.getPhoneNumber(), configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()))) {
+            else if (!registerRequest.getPhoneNumber().isEmpty() && !validatePhoneForm(registerRequest.getPhoneNumber(), configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()))) {
                 log.info("Phone format is invalid");
                 errorCodeEnum = PHONE_FORMAT_INVALID;
             } else {
-                // Get sms config for sms otp verification
-                Optional<Sms> registerSmsOptional = smsRepository.findBySmsCodeAndSmsFlow(SmsEnum.SMS_OTP_REGISTER.getCode(), Register.name());
-                if (registerSmsOptional.isPresent()) {
-                    String registerMessage = registerSmsOptional.get().getSmsContent();
-                    log.info("Start sending sms {} for otp verification in {} flow !", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
-                    smsServiceImpl.sendSms(registerRequest.getPhoneNumber(), registerMessage);
-
+                if (!registerRequest.getPhoneNumber().isEmpty()) {
+                    // Get sms config for sms otp verification
+                    Optional<Sms> registerSmsOptional = smsRepository.findBySmsCodeAndSmsFlow(SmsEnum.SMS_OTP_REGISTER.getCode(), Register.name());
+                    if (registerSmsOptional.isPresent()) {
+                        String registerMessage = registerSmsOptional.get().getSmsContent();
+                        log.info("Start sending sms {} for otp verification in {} flow !", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
+                        smsServiceImpl.sendSms(registerRequest.getPhoneNumber(), registerMessage);
+                    } else {
+                        log.error("There is no config for sms {} for {} flow!", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
+                        throw new BusinessException(SMS_NOT_CONFIG, Register.name());
+                    }
+                } else if (!registerRequest.getEmail().isEmpty()) {
+                    // Send verification code through email
+                } else {
+                    // Need either phone number or email for sign-up verification
+                    log.warn("Need either phone number or email for sign-up OTP verification!");
+                    throw new BusinessException(INTERNAL_SERVER_ERROR, Register.name());
+                }
+                // Check if OTP code is verified
+                if (validateRegistrationOtpCode()) {
                     User newUser = new User(registerRequest.getUsername(), passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true, false);
                     userRepository.save(newUser);
                     log.info("User has been created!");
                     errorCodeEnum = USER_CREATED;
                 } else {
-                    log.info("There is no config for sms {} for {} flow!", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
-                    errorCodeEnum = SMS_NOT_CONFIG;
+                    log.error("OTP verification failed!");
+                    throw new BusinessException(OTP_VERIFICATION_FAIL, Register.name());
                 }
             }
             return getCompleteResponse(errorCodeRepository, errorCodeEnum, Register.name(), null);
-        } catch (Exception e) {
+        } catch (
+                Exception e) {
             log.error("There has been an error in registering a new user!", e);
-            throw new BusinessException(INTERNAL_SERVER_ERROR, Common.name());
+            throw new BusinessException(INTERNAL_SERVER_ERROR, Register.name());
         }
+    }
+
+    private boolean validateRegistrationOtpCode() {
+        return true;
     }
 
     @Override
@@ -118,37 +136,33 @@ public class UserServiceImpl implements UserService {
     public CompleteResponse<Object> login(LoginDTO loginRequest) {
         String username = loginRequest.getUsername();
         ErrorCodeEnum errorCodeEnum;
-        // Validate if the username is a phone number
         boolean isPhoneNumber = validatePhoneForm(username, configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()));
-        // Retrieve the user based on username type (phone number or normal username)
-        Optional<User> userOptional = isPhoneNumber ? userRepository.findByPhoneNumberAndStatus(username, true) : userRepository.findByUsername(username);
+        // Retrieve the user based on username type (phone number or username)
+        Optional<User> userOptional = isPhoneNumber ? userRepository.findByPhoneNumberAndStatus(username, true) : userRepository.findByUsernameAndStatus(username, true);
         try {
-            // Handle user not found
             if (userOptional.isEmpty()) {
-                log.info("User {} not found!", username);
-                errorCodeEnum = USER_NOT_FOUND;
-            } else {
-                User user = userOptional.get();
-                // check if password matches and display corresponding error code.
-                boolean isPasswordCorrect = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
-                errorCodeEnum = isPasswordCorrect ? LOGIN_SUCCESS : PASSWORD_NOT_CORRECT;
-                log.info(isPasswordCorrect ? "User {} logged in successfully!" : "Password incorrect!", username);
+                log.error("User {} not found!", username);
+                throw new BusinessException(USER_NOT_FOUND, Register.name());
+            }
+            User user = userOptional.get();
+            // check if password matches and display corresponding error code.
+            boolean isPasswordCorrect = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
+            errorCodeEnum = isPasswordCorrect ? LOGIN_SUCCESS : PASSWORD_NOT_CORRECT;
+            log.info(isPasswordCorrect ? "User {} logged in successfully!" : "Password incorrect!", username);
+            // Establishes the authentication context for the session after successful login.
+            if (isPasswordCorrect) {
+                log.info("Current user: {}", user.getUsername());
+                // Create an authentication object from the user
+                Authentication authentication = new UsernamePasswordAuthenticationToken(user, user.getUsername(), user.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                // Establishes the authentication context for the session after successful login.
-                if (isPasswordCorrect) {
-                    log.info("Current user: {}", user.getPhoneNumber());
-                    // Create an authentication object from the user
-                    Authentication authentication = new UsernamePasswordAuthenticationToken(user, user.getPhoneNumber(), user.getAuthorities());
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                    // Change userName to phoneNumber
-                    if (!isPhoneNumber) {
-                        username = String.valueOf(authentication.getCredentials());
-                    }
-                    // Generate and return the JWT token
-                    String token = tokenServiceImpl.generateJwtToken(username).getResponseBody().getBody().toString();
-                    return getCompleteResponse(errorCodeRepository, errorCodeEnum, Login.name(), token);
+                // Change phoneNumber to userName
+                if (isPhoneNumber) {
+                    username = String.valueOf(authentication.getCredentials());
                 }
+                // Generate and return the JWT token
+                String token = tokenServiceImpl.generateJwtToken(username).getResponseBody().getBody().toString();
+                return getCompleteResponse(errorCodeRepository, errorCodeEnum, Login.name(), token);
             }
             return getCompleteResponse(errorCodeRepository, errorCodeEnum, Login.name(), null);
         } catch (Exception e) {

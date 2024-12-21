@@ -31,6 +31,8 @@ public enum ErrorCodeEnum {
     TOKEN_EXPIRE("E016", "Token expires", Token, HttpStatusCodeEnum.TOKEN_EXPIRE),
     INTERNAL_SERVER_ERROR("E017", "Internal server error", Common, HttpStatusCodeEnum.INTERNAL_SERVER_ERROR),
     CONFIG_NOT_FOUND("E018", "Config not found", Common, HttpStatusCodeEnum.CONFIG_NOT_FOUND),
+    INPUT_FORMAT_INVALID("E019", "Input format invalid", Common, HttpStatusCodeEnum.INPUT_FORMAT_INVALID),
+    OTP_VERIFICATION_FAIL("E020", "OTP code verification fail", Common, HttpStatusCodeEnum.OTP_VERIFICATION_FAIL),
     ;
 
 
