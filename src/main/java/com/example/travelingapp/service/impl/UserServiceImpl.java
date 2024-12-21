@@ -93,7 +93,7 @@ public class UserServiceImpl implements UserService {
                     log.info("Start sending sms {} for otp verification in {} flow !", SmsEnum.SMS_OTP_REGISTER.name(), SmsEnum.SMS_OTP_REGISTER.getFlow());
                     smsServiceImpl.sendSms(registerRequest.getPhoneNumber(), registerMessage);
 
-                    User newUser = new User(registerRequest.getUsername(), passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true);
+                    User newUser = new User(registerRequest.getUsername(), passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true, false);
                     userRepository.save(newUser);
                     log.info("User has been created!");
                     errorCodeEnum = USER_CREATED;
@@ -130,7 +130,7 @@ public class UserServiceImpl implements UserService {
             } else {
                 User user = userOptional.get();
                 // check if password matches and display corresponding error code.
-                boolean isPasswordCorrect = passwordEncoder.matches(passwordEncoder.encode(loginRequest.getPassword()), user.getPassword());
+                boolean isPasswordCorrect = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
                 errorCodeEnum = isPasswordCorrect ? LOGIN_SUCCESS : PASSWORD_NOT_CORRECT;
                 log.info(isPasswordCorrect ? "User {} logged in successfully!" : "Password incorrect!", username);
 
@@ -146,7 +146,7 @@ public class UserServiceImpl implements UserService {
                         username = String.valueOf(authentication.getCredentials());
                     }
                     // Generate and return the JWT token
-                    String token = tokenServiceImpl.generateToken(username).getResponseBody().getBody().toString();
+                    String token = tokenServiceImpl.generateJwtToken(username).getResponseBody().getBody().toString();
                     return getCompleteResponse(errorCodeRepository, errorCodeEnum, Login.name(), token);
                 }
             }
@@ -159,6 +159,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CompleteResponse<Object> test(String input) {
+        if (input.isEmpty()) {
+            throw new BusinessException(INTERNAL_SERVER_ERROR, Common.name());
+        }
         return getCompleteResponse(errorCodeRepository, LOGIN_SUCCESS, Test.name(), passwordEncoder.encode(input));
     }
 }

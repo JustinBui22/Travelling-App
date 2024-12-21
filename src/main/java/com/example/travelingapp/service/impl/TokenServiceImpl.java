@@ -45,7 +45,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     // Generate a Bearer Token based on the user's phone number
-    public CompleteResponse<Object> generateToken(String phoneNumber) {
+    public CompleteResponse<Object> generateJwtToken(String phoneNumber) {
         log.info("Start generating token!");
         Optional<Configuration> expirationTimeConfigOptional = configurationRepository.findByConfigCode(TOKEN_EXPIRATION_TIME.name());
         long expirationTime = expirationTimeConfigOptional
@@ -74,19 +74,19 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public CompleteResponse<Object> refreshToken(String authorizationHeader) {
+    public CompleteResponse<Object> refreshJwtToken(String authorizationHeader) {
         log.info("Start refreshing token!");
         // Checking if the request has the authorization header
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             return getCompleteResponse(errorCodeRepository, TOKEN_VERIFY_FAIL, Token.name(), null);
         }
         String token = authorizationHeader.substring(7);
-        String validateTokenCode = validateToken(token).getResponseBody().getCode();
+        String validateTokenCode = validateJwtToken(token).getResponseBody().getCode();
         if (validateTokenCode.equals(TOKEN_VERIFY_SUCCESS.getCode())) {
             log.info("Token validated successfully!");
             SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             String phoneNumber = SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
-            return generateToken(phoneNumber);
+            return generateJwtToken(phoneNumber);
         }
         log.warn("Token validation failed for reason: {}", validateTokenCode);
         if (validateTokenCode.equals(USER_NOT_FOUND.getCode())) {
@@ -100,7 +100,7 @@ public class TokenServiceImpl implements TokenService {
 
     // Validate the token and extract the phone number
     @SuppressWarnings("OptionalGetWithoutIsPresent")
-    public CompleteResponse<Object> validateToken(String token) {
+    public CompleteResponse<Object> validateJwtToken(String token) {
         log.info("Start validating token!");
         String phoneNumber;
         Optional<User> userOptional;
@@ -153,6 +153,27 @@ public class TokenServiceImpl implements TokenService {
             throw new RuntimeException();
         }
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
+
+    @Override
+    public void storeSessionToken(String userName, String token) {
+
+    }
+
+    @Override
+    public CompleteResponse<Object> getSessionToken(String userName) {
+        return null;
+    }
+
+    @Override
+    public void invalidateSessionToken(String userName) {
+
+    }
+
+    @Override
+    public boolean isSessionTokenValid(String userName, String token) {
+        return false;
     }
 
 }
