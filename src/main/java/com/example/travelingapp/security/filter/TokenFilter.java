@@ -3,7 +3,6 @@ package com.example.travelingapp.security.filter;
 import com.example.travelingapp.entity.User;
 import com.example.travelingapp.exception_handler.exception.BusinessException;
 import com.example.travelingapp.repository.ConfigurationRepository;
-import com.example.travelingapp.repository.ErrorCodeRepository;
 import com.example.travelingapp.repository.UserRepository;
 import com.example.travelingapp.service.impl.TokenServiceImpl;
 import com.example.travelingapp.response_template.CompleteResponse;
