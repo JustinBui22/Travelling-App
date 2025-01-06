@@ -36,20 +36,11 @@ public class SecurityConfig {
                             .forEach(url -> auth.requestMatchers(url.replaceFirst("^" + contextPath, "")).permitAll());
                     auth.anyRequest().authenticated();
                 })
-//                .formLogin().disable()
-//                .logout(logout -> logout
-//                        .logoutUrl("/logout")
-//                        .invalidateHttpSession(true)
-//                        .deleteCookies("JSESSIONID")
-//                )
-//                .sessionManagement(session -> session
-//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Use stateless session management for JWT
-//                )
-                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class) // Add the token filter
-                .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/welcome", true)
-                        .failureUrl("/login?error")
-                );
+                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class); // Add the token filter
+//                .oauth2Login(oauth2 -> oauth2
+//                        .defaultSuccessUrl("/welcome", true)
+//                        .failureUrl("/login?error")
+//                );
         return http.build();
     }
 

@@ -16,6 +16,7 @@ public enum CommonEnum {
     PHONE_VN_PATTERN(Group.Config),
     USERNAME_PATTERN(Group.Config),
     SECRET_KEY_CONFIG(Group.Config),
+    MAX_ALLOWED_SESSIONS(Group.Config),
 
     TOKEN_EXPIRATION_TIME(Group.Config),
     CURRENT_TOKEN_TIME_LEFT(Group.Config),

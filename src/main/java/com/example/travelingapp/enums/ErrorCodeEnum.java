@@ -12,6 +12,7 @@ public enum ErrorCodeEnum {
     USER_CREATED("E000", "User created", Register, HttpStatusCodeEnum.OK),
     LOGIN_SUCCESS("E000", "Log in successfully", Login, HttpStatusCodeEnum.OK),
     TOKEN_GENERATE_SUCCESS("E000", "Token generate successfully", Token, HttpStatusCodeEnum.OK),
+    TOKEN_RETRIEVE_SUCCESS("E000", "Token retrieved successfully", Token, HttpStatusCodeEnum.OK),
     TOKEN_VERIFY_SUCCESS("E000", "Token verified successfully", Token, HttpStatusCodeEnum.OK),
     INVALID_INPUT("E001", "Invalid input provided", Register, HttpStatusCodeEnum.INVALID_INPUT),
     USERNAME_TAKEN("E002", "Username taken", Register, HttpStatusCodeEnum.USERNAME_TAKEN),
@@ -33,6 +34,9 @@ public enum ErrorCodeEnum {
     CONFIG_NOT_FOUND("E018", "Config not found", Common, HttpStatusCodeEnum.CONFIG_NOT_FOUND),
     INPUT_FORMAT_INVALID("E019", "Input format invalid", Common, HttpStatusCodeEnum.INPUT_FORMAT_INVALID),
     OTP_VERIFICATION_FAIL("E020", "OTP code verification fail", Common, HttpStatusCodeEnum.OTP_VERIFICATION_FAIL),
+    TOKEN_NOT_FOUND("E021", "Token not found", Token, HttpStatusCodeEnum.OK),
+    MAX_SESSIONS_REACHED("E022","Max session reached", Login, HttpStatusCodeEnum.MAX_SESSIONS_REACHED),
+    SESSION_TOKEN_INVALID("E022","Max session reached", Login, HttpStatusCodeEnum.MAX_SESSIONS_REACHED)
     ;
 
 

@@ -23,7 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.*;
 
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
@@ -135,6 +135,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public CompleteResponse<Object> login(LoginDTO loginRequest) {
         String username = loginRequest.getUsername();
+        // Check if the user has exceeded maxed number of active sessions
+        tokenServiceImpl.isExceedMaxAllowedSessions(username);
         ErrorCodeEnum errorCodeEnum;
         boolean isPhoneNumber = validatePhoneForm(username, configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()));
         // Retrieve the user based on username type (phone number or username)
@@ -160,15 +162,24 @@ public class UserServiceImpl implements UserService {
                 if (isPhoneNumber) {
                     username = String.valueOf(authentication.getCredentials());
                 }
-                // Generate and return the JWT token
-                String token = tokenServiceImpl.generateJwtToken(username).getResponseBody().getBody().toString();
-                return getCompleteResponse(errorCodeRepository, errorCodeEnum, Login.name(), token);
+                // Generate and return the session and JWT token
+                String jwtToken = tokenServiceImpl.generateJwtToken(username).getResponseBody().getBody().toString();
+                String sessionToken = tokenServiceImpl.generateSessionToken(username).getResponseBody().getBody().toString();
+                Map<String, String> tokenMap = new HashMap<>();
+                tokenMap.put("jwtToken", jwtToken);
+                tokenMap.put("sessionToken", sessionToken);
+                return getCompleteResponse(errorCodeRepository, errorCodeEnum, Login.name(), tokenMap);
             }
             return getCompleteResponse(errorCodeRepository, errorCodeEnum, Login.name(), null);
         } catch (Exception e) {
             log.error("There has been an error in logging in for user {}!", username, e);
             throw new BusinessException(INTERNAL_SERVER_ERROR, Common.name());
         }
+    }
+
+    @Override
+    public CompleteResponse<Object> logout(LoginDTO loginRequest) {
+        return null;
     }
 
     @Override

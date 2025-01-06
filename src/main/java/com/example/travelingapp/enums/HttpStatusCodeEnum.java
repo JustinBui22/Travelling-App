@@ -22,6 +22,9 @@ public enum HttpStatusCodeEnum {
     TOKEN_EXPIRE(613, Series.ERROR, "Token expires"),
     INPUT_FORMAT_INVALID(614, Series.ERROR, "Input format invalid"),
     OTP_VERIFICATION_FAIL(615, Series.ERROR, "OTP code verification fail"),
+    TOKEN_NOT_FOUND(616, Series.ERROR, "OTP code verification fail"),
+    MAX_SESSIONS_REACHED(617, Series.ERROR, "Max sessions reached"),
+    SESSION_TOKEN_INVALID(618, Series.ERROR, "Session token invalid"),
 
     CONTINUE(100, HttpStatusCodeEnum.Series.INFORMATIONAL, "Continue"),
     SWITCHING_PROTOCOLS(101, HttpStatusCodeEnum.Series.INFORMATIONAL, "Switching Protocols"),
