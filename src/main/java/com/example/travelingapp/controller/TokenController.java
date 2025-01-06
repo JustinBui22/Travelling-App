@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/private/auth/token/")
 public interface TokenController {
     @GetMapping("/generate")
-    ResponseEntity<ResponseBody<Object>> generateToken(@NotNull @RequestParam(value = "phoneNumber") String phoneNumber);
+    ResponseEntity<ResponseBody<Object>> generateToken(@NotNull @RequestParam(value = "userName") String userName);
 
     @GetMapping("/refresh")
-    ResponseEntity<ResponseBody<Object>> refreshToken(@NotNull @RequestHeader("Authorization") String authorizationHeader);
+    ResponseEntity<ResponseBody<Object>> refreshToken(@NotNull @RequestHeader("Authorization") String authorizationHeader,
+                                                      @NotNull @RequestHeader(value = "Session-Token") String sessionTokenHeader,
+                                                      @NotNull @RequestParam(value = "userName") String userName);
 }

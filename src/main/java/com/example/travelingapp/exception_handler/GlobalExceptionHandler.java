@@ -41,4 +41,10 @@ public class GlobalExceptionHandler {
         }
         return null;
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ResponseBody<Object>> handleAllExceptions(Exception ex) {
+        CompleteResponse<Object> result = getCompleteResponse(errorCodeRepository, INTERNAL_SERVER_ERROR, Common.name(), ex.getMessage());
+        return new ResponseEntity<>(result.getResponseBody(), HttpStatusCode.valueOf(result.getHttpCode()));
+    }
 }

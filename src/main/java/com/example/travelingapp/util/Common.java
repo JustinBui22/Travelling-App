@@ -24,7 +24,6 @@ public class Common {
             // Clean and split the configuration value to get individual URLs
             String[] nonAuthenticatedUrls = nonAuthenRequestUrlOptional.get().getConfigValue()
                     .replaceAll("[{}]", "") // Remove curly braces
-
                     .split(","); // Split by commas to get individual URLs
             // Clean up each URL in the array (remove newlines, trim spaces)
             return Arrays.stream(nonAuthenticatedUrls)

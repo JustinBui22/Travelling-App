@@ -17,15 +17,15 @@ public class TokenControllerImpl implements TokenController {
     }
 
     @Override
-    public ResponseEntity<ResponseBody<Object>> generateToken(String phoneNumber) {
-        CompleteResponse<Object> response = tokenService.generateJwtToken(phoneNumber);
+    public ResponseEntity<ResponseBody<Object>> generateToken(String userName) {
+        CompleteResponse<Object> response = tokenService.generateJwtToken(userName);
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
 
     }
 
     @Override
-    public ResponseEntity<ResponseBody<Object>> refreshToken(String authorizationHeader) {
-        CompleteResponse<Object> response = tokenService.refreshJwtToken(authorizationHeader);
+    public ResponseEntity<ResponseBody<Object>> refreshToken(String authorizationHeader, String sessionTokenHeader, String userName) {
+        CompleteResponse<Object> response = tokenService.refreshJwtToken(authorizationHeader, sessionTokenHeader, userName);
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
     }
 }

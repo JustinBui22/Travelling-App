@@ -14,8 +14,11 @@ public class SessionTokenStore {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private long id;
+
     @Column(name = "session_id")
-    private long sessionId;
+    private String sessionId;
 
     @Column(name = "username", nullable = false, unique = true)
     private String userName;
@@ -29,4 +32,14 @@ public class SessionTokenStore {
     @Column(name = "modified_date")
     private LocalDate modifiedDate;
 
+    public SessionTokenStore(String userName, String token, String sessionId, LocalDate createdDate) {
+        this.userName = userName;
+        this.token = token;
+        this.sessionId = sessionId;
+        this.createdDate = createdDate;
+    }
+
+    public SessionTokenStore() {
+
+    }
 }
