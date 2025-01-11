@@ -93,7 +93,7 @@ public class Common {
         return configurationRepository.findByConfigCode(key)
                 .map(ConfigurationEntity::getConfigValue)
                 .orElseGet(() -> {
-                    log.error("There is no config value for {} ---> Getting default value!", OTP_EXPIRATION_TIME.name());
+                    log.error("There is no config value for {} ---> Getting default value {}!", OTP_EXPIRATION_TIME.name(), defaultValue);
                     return defaultValue;
                 });
     }
