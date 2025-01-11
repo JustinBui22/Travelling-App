@@ -47,8 +47,8 @@ public class User implements Serializable, UserDetails {
     @Column(name = "phone_num")
     private String phoneNumber;
 
-    @Column(name = "status", nullable = false)
-    private boolean status;
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive;
 
     @Column(name = "is_OAuth2", nullable = false)
     private boolean isOAuth2;
@@ -59,24 +59,23 @@ public class User implements Serializable, UserDetails {
         this.email = email;
     }
 
-    public User(String username, String password, String phoneNumber, LocalDate dob, LocalDate createdDate, String email, boolean status, boolean isOAuth2) {
+    public User(String username, String password, String phoneNumber, LocalDate dob, LocalDate createdDate, String email, boolean isActive) {
         this.username = username;
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.dob = dob;
         this.createdDate = createdDate;
         this.email = email;
-        this.status = status;
-        this.isOAuth2 = isOAuth2;
+        this.isActive = isActive;
     }
 
-    public User(String username, String password, LocalDate dob, LocalDate createdDate, String email, boolean status, boolean isOAuth2) {
+    public User(String username, String password, LocalDate dob, LocalDate createdDate, String email, boolean isActive, boolean isOAuth2) {
         this.username = username;
         this.password = password;
         this.dob = dob;
         this.createdDate = createdDate;
         this.email = email;
-        this.status = status;
+        this.isActive = isActive;
         this.isOAuth2 = isOAuth2;
     }
 

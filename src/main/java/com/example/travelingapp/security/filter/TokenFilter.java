@@ -93,7 +93,7 @@ public class TokenFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         // Populate SecurityContext with authenticated user
         Claims claims = (Claims) validateTokenResponse.getResponseBody().getBody();
-        User user = userRepository.findByUsernameAndStatus(claims.getSubject(), true).get();
+        User user = userRepository.findByUsernameAndActive(claims.getSubject(), true).get();
         String userName = user.getUsername();
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 user, userName, user.getAuthorities());
@@ -102,7 +102,7 @@ public class TokenFilter extends OncePerRequestFilter {
         String sessionToken = request.getHeader("Session-Token");
         if (sessionToken == null || !tokenServiceImpl.isSessionTokenValid(userName, sessionToken)) {
             log.error("Invalid session token for user: {}", userName);
-            throw new BusinessException(SESSION_TOKEN_INVALID, Token.name());
+            throw new BusinessException(SESSION_TOKEN_INVALID, TOKEN.name());
         }
         // Check if the token is nearing expiration (fallback mechanism)
         long currentTokenTimeLeft = claims.getExpiration().getTime() - System.currentTimeMillis();
@@ -120,16 +120,15 @@ public class TokenFilter extends OncePerRequestFilter {
     }
 
     private void handleTokenValidationFailure(String responseCode) {
-        //    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         if (responseCode.equals(USER_NOT_FOUND.getCode())) {
             log.error("No user found as {}", SecurityContextHolder.getContext().getAuthentication().getCredentials());
-            throw new BusinessException(USER_NOT_FOUND, Token.name());
+            throw new BusinessException(USER_NOT_FOUND, TOKEN.name());
         } else if (responseCode.equals(TOKEN_EXPIRE.getCode())) {
             log.error("Token expires!");
-            throw new BusinessException(TOKEN_EXPIRE, Token.name());
+            throw new BusinessException(TOKEN_EXPIRE, TOKEN.name());
         } else {
             log.error("Token verification failed!");
-            throw new BusinessException(TOKEN_VERIFY_FAIL, Token.name());
+            throw new BusinessException(TOKEN_VERIFY_FAIL, TOKEN.name());
         }
     }
 

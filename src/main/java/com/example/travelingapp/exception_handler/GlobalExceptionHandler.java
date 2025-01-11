@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Objects;
 
-import static com.example.travelingapp.enums.CommonEnum.Common;
+import static com.example.travelingapp.enums.CommonEnum.COMMON;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
 import static com.example.travelingapp.response_template.CompleteResponse.getCompleteResponse;
 
@@ -36,15 +36,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseBody<Object>> handleMethodValidationExceptions(MethodArgumentNotValidException ex) {
         if (ex.getBindingResult().hasErrors()) {
             String errorMessage = Objects.requireNonNull(ex.getBindingResult().getAllErrors().getFirst().getDefaultMessage());
-            CompleteResponse<Object> result = getCompleteResponse(errorCodeRepository, INVALID_INPUT, Common.name(), errorMessage);
+            CompleteResponse<Object> result = getCompleteResponse(errorCodeRepository, INVALID_INPUT, COMMON.name(), errorMessage);
             return new ResponseEntity<>(result.getResponseBody(), HttpStatusCode.valueOf(result.getHttpCode()));
         }
         return null;
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ResponseBody<Object>> handleAllExceptions(Exception ex) {
-        CompleteResponse<Object> result = getCompleteResponse(errorCodeRepository, INTERNAL_SERVER_ERROR, Common.name(), ex.getMessage());
-        return new ResponseEntity<>(result.getResponseBody(), HttpStatusCode.valueOf(result.getHttpCode()));
     }
 }

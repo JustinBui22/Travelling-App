@@ -12,6 +12,4 @@ public interface UserService {
     CompleteResponse<Object> login(LoginDTO loginRequest);
 
     CompleteResponse<Object> logout(LoginDTO loginRequest);
-
-    CompleteResponse<Object> test(String input);
 }

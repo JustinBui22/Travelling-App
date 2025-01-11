@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @Table(name = "Configuration")
 @Getter
 @Setter
-public class Configuration {
+public class ConfigurationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,12 +36,12 @@ public class Configuration {
     private String configType;
 
 
-    public Configuration(String configCode, String configValue) {
+    public ConfigurationEntity(String configCode, String configValue) {
         this.configCode = configCode;
         this.configValue = configValue;
     }
 
-    public Configuration() {
+    public ConfigurationEntity() {
 
     }
 }

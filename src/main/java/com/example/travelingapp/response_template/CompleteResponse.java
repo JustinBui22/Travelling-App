@@ -1,6 +1,6 @@
 package com.example.travelingapp.response_template;
 
-import com.example.travelingapp.entity.ErrorCode;
+import com.example.travelingapp.entity.ErrorCodeEntity;
 import com.example.travelingapp.enums.ErrorCodeEnum;
 import com.example.travelingapp.enums.HttpStatusCodeEnum;
 import com.example.travelingapp.repository.ErrorCodeRepository;
@@ -28,7 +28,7 @@ public final class CompleteResponse<T> {
     }
 
     public static CompleteResponse<Object> getCompleteResponse(ErrorCodeRepository errorCodeRepository, ErrorCodeEnum errorCodeEnum, String flow, Object object) {
-        Optional<ErrorCode> errorCodeOptional = errorCodeRepository.findByErrorEnumAndFlow(errorCodeEnum.name(), flow);
+        Optional<ErrorCodeEntity> errorCodeOptional = errorCodeRepository.findByErrorEnumAndFlow(errorCodeEnum.name(), flow);
         if (errorCodeOptional.isEmpty()) {
             log.info("There is no error code {} in flow {}, removing flow.", errorCodeEnum.name(), flow);
             errorCodeOptional = errorCodeRepository.findFirstByErrorEnum(errorCodeEnum.name());
@@ -39,7 +39,7 @@ public final class CompleteResponse<T> {
         }
         String errorCode = getErrorCode(errorCodeOptional.get());
         String errorMessage = getErrorCodeMessage(errorCodeOptional.get());
-        String errorDescription = errorCodeOptional.map(ErrorCode::getErrorDescription).orElse(null);
+        String errorDescription = errorCodeOptional.map(ErrorCodeEntity::getErrorDescription).orElse(null);
         HttpStatusCodeEnum httpStatusCode = getHttpFromErrorCode(errorCodeOptional.get());
         if (object == null) {
             return new CompleteResponse<>(new ResponseBody<>(errorCode, errorMessage, flow, errorDescription), httpStatusCode.value);

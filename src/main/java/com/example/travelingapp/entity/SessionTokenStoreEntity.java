@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @Table(name = "session_token_store")
 @Getter
 @Setter
-public class SessionTokenStore {
+public class SessionTokenStoreEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,14 +32,14 @@ public class SessionTokenStore {
     @Column(name = "modified_date")
     private LocalDate modifiedDate;
 
-    public SessionTokenStore(String userName, String token, String sessionId, LocalDate createdDate) {
+    public SessionTokenStoreEntity(String userName, String token, String sessionId, LocalDate createdDate) {
         this.userName = userName;
         this.token = token;
         this.sessionId = sessionId;
         this.createdDate = createdDate;
     }
 
-    public SessionTokenStore() {
+    public SessionTokenStoreEntity() {
 
     }
 }

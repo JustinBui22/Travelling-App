@@ -5,25 +5,40 @@ import lombok.Getter;
 @Getter
 public enum CommonEnum {
 
-    Test(Group.Flow),
-    Register(Group.Flow),
-    Login(Group.Flow),
-    Common(Group.Flow),
-    Token(Group.Flow),
+    TEST(Group.FLOW),
+    REGISTER(Group.FLOW),
+    LOGIN(Group.FLOW),
+    COMMON(Group.FLOW),
+    TOKEN(Group.FLOW),
+    OTP(Group.FLOW),
+    SMS(Group.FLOW),
+    EMAIL(Group.FLOW),
 
-    PASSWORD_PATTERN(Group.Config),
-    EMAIL_PATTERN(Group.Config),
-    PHONE_VN_PATTERN(Group.Config),
-    USERNAME_PATTERN(Group.Config),
-    SECRET_KEY_CONFIG(Group.Config),
-    MAX_ALLOWED_SESSIONS(Group.Config),
+    PASSWORD_PATTERN(Group.CONFIG),
+    EMAIL_PATTERN(Group.CONFIG),
+    PHONE_VN_PATTERN(Group.CONFIG),
+    USERNAME_PATTERN(Group.CONFIG),
+    SECRET_KEY_CONFIG(Group.CONFIG),
+    MAX_ALLOWED_SESSIONS(Group.CONFIG),
+    TOKEN_EXPIRATION_TIME(Group.CONFIG),
+    OTP_EXPIRATION_TIME(Group.CONFIG),
+    CURRENT_TOKEN_TIME_LEFT(Group.CONFIG),
+    NON_AUTHENTICATED_REQUEST(Group.CONFIG),
 
-    TOKEN_EXPIRATION_TIME(Group.Config),
-    CURRENT_TOKEN_TIME_LEFT(Group.Config),
-    NON_AUTHENTICATED_REQUEST(Group.Config),
+    EMAIL_ADDRESS_CONFIG(Group.CONFIG),
+    EMAIL_HOST_CONFIG(Group.CONFIG),
+    EMAIL_PORT_CONFIG(Group.CONFIG),
+    EMAIL_CLIENT_ID(Group.CONFIG),
+    EMAIL_CLIENT_SECRET(Group.CONFIG),
+    EMAIL_TOKEN_URL(Group.CONFIG),
+    EMAIL_ACCESS_TOKEN_CONFIG(Group.CONFIG),
+    EMAIL_REFRESH_TOKEN(Group.CONFIG),
 
-    AES(Group.Algorithm),
-    RSA(Group.Algorithm),
+    PHONE_NUM_OTP(Group.OTP_METHOD),
+    EMAIL_OTP(Group.OTP_METHOD),
+
+    AES(Group.ALGORITHM),
+    RSA(Group.ALGORITHM),
     ;
 
 
@@ -34,8 +49,9 @@ public enum CommonEnum {
     }
 
     public enum Group {
-        Flow,
-        Config,
-        Algorithm
+        FLOW,
+        CONFIG,
+        ALGORITHM,
+        OTP_METHOD
     }
 }
