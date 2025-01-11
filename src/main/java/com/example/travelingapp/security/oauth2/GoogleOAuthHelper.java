@@ -5,21 +5,31 @@ import com.example.travelingapp.exception_handler.exception.BusinessException;
 import com.example.travelingapp.repository.ConfigurationRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.INTERNAL_SERVER_ERROR;
 import static com.example.travelingapp.util.Common.getConfigValue;
 
 @Log4j2
-public class GoogleOAuthHelper {
+@Component
+@EnableScheduling
+public class GoogleOAuthHelper implements SchedulingConfigurer {
     private final ConfigurationRepository configurationRepository;
+    private ScheduledExecutorService scheduler;
 
     public GoogleOAuthHelper(ConfigurationRepository configurationRepository) {
         this.configurationRepository = configurationRepository;
@@ -32,16 +42,15 @@ public class GoogleOAuthHelper {
             // Prepare request data
             String clientId = getConfigValue(EMAIL_CLIENT_ID.name(), configurationRepository, OTP.name());
             String clientSecret = getConfigValue(EMAIL_CLIENT_SECRET.name(), configurationRepository, OTP.name());
-            Map<String, String> requestData = new HashMap<>();
-            requestData.put("client_id", clientId);
-            requestData.put("client_secret", clientSecret);
-            requestData.put("refresh_token", refreshToken);
-            requestData.put("grant_type", "refresh_token");
+            LinkedMultiValueMap<String, String> requestData = new LinkedMultiValueMap<>();
+            requestData.add("client_id", clientId);
+            requestData.add("client_secret", clientSecret);
+            requestData.add("refresh_token", refreshToken);
+            requestData.add("grant_type", "refresh_token");
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-            HttpEntity<Map<String, String>> request = new HttpEntity<>(requestData, headers);
+            HttpEntity<LinkedMultiValueMap<String, String>> request = new HttpEntity<>(requestData, headers);
 
             // Send POST request
             String tokenUrl = getConfigValue(EMAIL_TOKEN_URL, configurationRepository, "https://oauth2.googleapis.com/token");
@@ -60,7 +69,6 @@ public class GoogleOAuthHelper {
         }
     }
 
-    @Scheduled(fixedRate = 3500000) // Refresh every ~1 hour
     public void refreshOAuthToken() {
         try {
             String refreshToken = getConfigValue(EMAIL_REFRESH_TOKEN, configurationRepository, OTP.name());
@@ -68,13 +76,29 @@ public class GoogleOAuthHelper {
 
             // Store new token
             ConfigurationEntity config = configurationRepository.findByConfigCode(EMAIL_ACCESS_TOKEN_CONFIG.name())
-                    .orElse(new ConfigurationEntity(EMAIL_ACCESS_TOKEN_CONFIG.name(), newAccessToken));
+                    .orElse(new ConfigurationEntity(EMAIL_ACCESS_TOKEN_CONFIG.name(), newAccessToken, LocalDate.now()));
             config.setConfigValue(newAccessToken);
+            config.setModifiedDate(LocalDate.now());
             configurationRepository.save(config);
             log.info("OAuth2 token refreshed successfully.");
         } catch (Exception e) {
             log.error("Error refreshing OAuth2 token", e);
         }
+    }
+
+    @Override
+    public void configureTasks(@NonNull ScheduledTaskRegistrar taskRegistrar) {
+        long refreshRate = Long.parseLong(getConfigValue(EMAIL_REFRESH_ACCESS_TOKEN_RATE.name(), configurationRepository, "2700000"));
+        // Initialize scheduler only once and store it
+        //  this executor won't be automatically shut down by Spring.
+        //  If you ever need to stop or manage your scheduled tasks, it could be more efficient to manage the executor yourself
+        //  (for example, by storing it as a field)
+        if (scheduler == null || scheduler.isShutdown()) {
+            scheduler = Executors.newSingleThreadScheduledExecutor();
+        }
+        // Schedule task using newSingleThreadScheduledExecutor
+        scheduler.scheduleAtFixedRate(this::refreshOAuthToken, 0, refreshRate, TimeUnit.MILLISECONDS);
+        log.info("OAuth token refresh scheduled every {} milliseconds.", refreshRate);
     }
 }
 

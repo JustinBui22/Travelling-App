@@ -36,9 +36,10 @@ public class ConfigurationEntity {
     private String configType;
 
 
-    public ConfigurationEntity(String configCode, String configValue) {
+    public ConfigurationEntity(String configCode, String configValue, LocalDate createdDate) {
         this.configCode = configCode;
         this.configValue = configValue;
+        this.createdDate = createdDate;
     }
 
     public ConfigurationEntity() {
