@@ -16,13 +16,11 @@ import static com.example.travelingapp.util.Common.getNonAuthenticatedUrls;
 
 @Configuration
 public class SecurityConfig {
-
     private final ConfigurationRepository configurationRepository;
 
     public SecurityConfig(ConfigurationRepository configurationRepository) {
         this.configurationRepository = configurationRepository;
     }
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, TokenFilter tokenFilter, Environment environment) throws Exception {
@@ -37,10 +35,6 @@ public class SecurityConfig {
                     auth.anyRequest().authenticated();
                 })
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class); // Add the token filter
-//                .oauth2Login(oauth2 -> oauth2
-//                        .defaultSuccessUrl("/welcome", true)
-//                        .failureUrl("/login?error")
-//                );
         return http.build();
     }
 

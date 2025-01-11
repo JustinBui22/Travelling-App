@@ -25,6 +25,8 @@ public enum HttpStatusCodeEnum {
     TOKEN_NOT_FOUND(616, Series.ERROR, "OTP code verification fail"),
     MAX_SESSIONS_REACHED(617, Series.ERROR, "Max sessions reached"),
     SESSION_TOKEN_INVALID(618, Series.ERROR, "Session token invalid"),
+    SMS_SENT_FAIL(619, Series.ERROR, "SMS sent fail"),
+    EMAIL_SENT_FAIL(620, Series.ERROR, "Email sent fail"),
 
     CONTINUE(100, HttpStatusCodeEnum.Series.INFORMATIONAL, "Continue"),
     SWITCHING_PROTOCOLS(101, HttpStatusCodeEnum.Series.INFORMATIONAL, "Switching Protocols"),

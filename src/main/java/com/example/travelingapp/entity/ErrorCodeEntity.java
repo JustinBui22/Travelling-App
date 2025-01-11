@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @Table(name = "Error_Codes")
 @Getter
 @Setter
-public class ErrorCode {
+public class ErrorCodeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,8 +43,4 @@ public class ErrorCode {
 
     @Column(name = "flow")
     private String flow;
-
-    public ErrorCode() {
-
-    }
 }

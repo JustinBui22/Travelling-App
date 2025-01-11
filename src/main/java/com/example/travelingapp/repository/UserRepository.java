@@ -2,6 +2,7 @@ package com.example.travelingapp.repository;
 
 import com.example.travelingapp.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -17,6 +18,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByUsername(String username);
 
     Optional<User> findByEmail(String email);
-    Optional<User> findByPhoneNumberAndStatus(String phoneNumber, boolean status);
-    Optional<User> findByUsernameAndStatus(String phoneNumber, boolean status);
+
+    @Query("SELECT u FROM User u WHERE u.username = :username AND u.isActive = :isActive")
+    Optional<User> findByUsernameAndActive(String username, boolean isActive);
 }

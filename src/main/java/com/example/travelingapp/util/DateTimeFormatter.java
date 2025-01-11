@@ -4,6 +4,8 @@ import java.time.LocalDate;
 
 public class DateTimeFormatter {
 
+    private DateTimeFormatter() {}
+
     public static LocalDate toLocalDate(String date) {
         java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
         return LocalDate.parse(date, formatter);

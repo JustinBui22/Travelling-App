@@ -1,5 +1,6 @@
 package com.example.travelingapp.entity;
 
+import com.example.travelingapp.enums.SmsEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +11,7 @@ import java.time.LocalDate;
 @Table(name = "Sms_Contents")
 @Getter
 @Setter
-public class Sms {
+public class SmsEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,13 +33,8 @@ public class Sms {
     @Column(name = "modified_date")
     private LocalDate modifiedDate;
 
-    public Sms(String smsCode, String smsContent, String smsFlow) {
-        this.smsCode = smsCode;
-        this.smsContent = smsContent;
-        this.smsFlow = smsFlow;
-    }
-
-    public Sms() {
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sms_enum", nullable = false)
+    private SmsEnum smsEnum;
 }
 

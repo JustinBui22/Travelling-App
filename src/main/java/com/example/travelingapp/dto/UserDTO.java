@@ -23,7 +23,7 @@ public class UserDTO {
 
     private String email;
 
-    @Size(min = 9, max = 15, message = "Phone number must be between 9 and 15 characters")
+    @Size(max = 15, message = "Phone number must be between 9 and 15 characters")
     private String phoneNumber;
 
     @NotNull(message = "Date of birth cannot be null or empty")
@@ -32,26 +32,15 @@ public class UserDTO {
 
     private String referredCode;
 
+    @NotBlank(message = "OTP verification method cannot be null or empty")
+    private String otpVerificationMethod;
+
+    @NotBlank(message = "OTP cannot be null or empty")
+    private String otp;
+
     public UserDTO(String username, String password) {
         this.username = username;
         this.password = password;
     }
 }
 
-//    public void validateUser(UserDTO userDTO) {
-//        if (userDTO.getPhone() == null || userDTO.getPhone().trim().isEmpty()) {
-//            throw new IllegalArgumentException("Phone cannot be null or empty");
-//        }
-//        if (userDTO.getUsername() == null || userDTO.getUsername().trim().isEmpty()) {
-//            throw new IllegalArgumentException("Username cannot be null or empty");
-//        }
-//        if (userDTO.getPassword() == null || userDTO.getPassword().trim().isEmpty()) {
-//            throw new IllegalArgumentException("Password cannot be null or empty");
-//        }
-//        if (!isValidPhone(userDTO.getPhone())) {
-//            throw new IllegalArgumentException("Phone number must be valid");
-//        }
-//        if (!isValidEmail(userDTO.getEmail())) {
-//            throw new IllegalArgumentException("Email must be valid");
-//        }
-//    }

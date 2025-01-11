@@ -1,13 +1,13 @@
 package com.example.travelingapp.repository;
 
-import com.example.travelingapp.entity.Configuration;
+import com.example.travelingapp.entity.ConfigurationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface ConfigurationRepository extends JpaRepository<Configuration, Integer> {
+public interface ConfigurationRepository extends JpaRepository<ConfigurationEntity, Integer> {
 
-    Optional<Configuration> findByConfigCode(String configCode);
+    Optional<ConfigurationEntity> findByConfigCode(String configCode);
 }
