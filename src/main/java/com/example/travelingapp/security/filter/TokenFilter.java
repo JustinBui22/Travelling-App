@@ -81,6 +81,8 @@ public class TokenFilter extends OncePerRequestFilter {
                 log.error("There has been an error in {}!", this.getClass(), e);
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
+        } else {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
 

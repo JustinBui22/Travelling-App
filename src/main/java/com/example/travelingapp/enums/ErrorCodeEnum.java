@@ -44,6 +44,8 @@ public enum ErrorCodeEnum {
     SESSION_TOKEN_INVALID("E023","Max session reached", LOGIN, HttpStatusCodeEnum.MAX_SESSIONS_REACHED),
     SMS_SENT_FAIL("E024", "Sms sent failed", SMS, HttpStatusCodeEnum.SMS_SENT_FAIL),
     EMAIL_SENT_FAIL("E025", "Email sent failed", SMS, HttpStatusCodeEnum.EMAIL_SENT_FAIL),
+    MAX_OTP_RETRY("E026", "Max OTP retry exceeded", OTP, HttpStatusCodeEnum.MAX_OTP_RETRY),
+    VERIFICATION_OTP_EXPIRED("E027", "Verification OTP expired", OTP, HttpStatusCodeEnum.VERIFICATION_OTP_EXPIRED),
     ;
 
 

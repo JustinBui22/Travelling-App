@@ -84,8 +84,8 @@ public class Common {
         return configurationRepository.findByConfigCode(commonEnum.name())
                 .map(ConfigurationEntity::getConfigValue)
                 .orElseGet(() -> {
-                    log.error("There is no config value for {}", OTP_EXPIRATION_TIME.name());
-                    throw new BusinessException(CONFIG_NOT_FOUND, flow); // default value of 5 minutes
+                    log.error("There is no config value for {}", commonEnum.name());
+                    throw new BusinessException(CONFIG_NOT_FOUND, flow);
                 });
     }
 
@@ -93,7 +93,7 @@ public class Common {
         return configurationRepository.findByConfigCode(key)
                 .map(ConfigurationEntity::getConfigValue)
                 .orElseGet(() -> {
-                    log.error("There is no config value for {} ---> Getting default value {}!", OTP_EXPIRATION_TIME.name(), defaultValue);
+                    log.error("There is no config value for {} ---> Getting default value {}!", key, defaultValue);
                     return defaultValue;
                 });
     }

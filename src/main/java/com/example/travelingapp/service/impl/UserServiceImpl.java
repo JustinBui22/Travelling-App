@@ -1,6 +1,7 @@
 package com.example.travelingapp.service.impl;
 
 import com.example.travelingapp.dto.LoginDTO;
+import com.example.travelingapp.dto.OtpDTO;
 import com.example.travelingapp.entity.User;
 import com.example.travelingapp.enums.ErrorCodeEnum;
 import com.example.travelingapp.exception_handler.exception.BusinessException;
@@ -37,14 +38,16 @@ public class UserServiceImpl implements UserService {
     private final ErrorCodeRepository errorCodeRepository;
     private final TokenServiceImpl tokenServiceImpl;
     private final PasswordEncoder passwordEncoder;
+    private final OtpServiceImpl otpServiceImpl;
 
 
-    public UserServiceImpl(UserRepository userRepository, ConfigurationRepository configurationRepository, ErrorCodeRepository errorCodeRepository, TokenServiceImpl tokenServiceImpl, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, ConfigurationRepository configurationRepository, ErrorCodeRepository errorCodeRepository, TokenServiceImpl tokenServiceImpl, PasswordEncoder passwordEncoder, OtpServiceImpl otpServiceImpl) {
         this.userRepository = userRepository;
         this.configurationRepository = configurationRepository;
         this.errorCodeRepository = errorCodeRepository;
         this.tokenServiceImpl = tokenServiceImpl;
         this.passwordEncoder = passwordEncoder;
+        this.otpServiceImpl = otpServiceImpl;
     }
 
     @Override
@@ -80,7 +83,8 @@ public class UserServiceImpl implements UserService {
                 throw new BusinessException(PHONE_FORMAT_INVALID, REGISTER.name());
             }
             // Check if OTP code is verified
-            if (validateRegistrationOtpCode(registerRequest)) {
+            String verifyOtpErrorCode = otpServiceImpl.verifyOtp(new OtpDTO(registerRequest.getUsername(), registerRequest.getOtp())).getResponseBody().getCode();
+            if (verifyOtpErrorCode.equals(OTP_VERIFICATION_SUCCESS.getCode())) {
                 User newUser = new User(registerRequest.getUsername(), passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true);
                 userRepository.save(newUser);
                 log.info("User has been created!");
@@ -96,10 +100,6 @@ public class UserServiceImpl implements UserService {
             log.error("There has been an error in registering a new user!", e);
             throw new BusinessException(INTERNAL_SERVER_ERROR, REGISTER.name());
         }
-    }
-
-    private boolean validateRegistrationOtpCode(UserDTO registerRequest) {
-        return true;
     }
 
     @Override

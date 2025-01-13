@@ -30,8 +30,8 @@ public class OtpDTO {
 
     private EmailEnum emailEnum;
 
-    public OtpDTO(String otpVerificationMethod, String otp) {
-        this.otpVerificationMethod = otpVerificationMethod;
+    public OtpDTO(String userName, String otp) {
+        this.userName = userName;
         this.otp = otp;
     }
 }
