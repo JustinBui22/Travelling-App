@@ -35,7 +35,7 @@ public class GoogleOAuthHelper implements SchedulingConfigurer {
         this.configurationRepository = configurationRepository;
     }
 
-    public String refreshOAuthAccessToken(String refreshToken) {
+    public String getNewOAuthAccessToken(String refreshToken) {
         try {
             RestTemplate restTemplate = new RestTemplate();
 
@@ -61,7 +61,7 @@ public class GoogleOAuthHelper implements SchedulingConfigurer {
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
 
             String newAccessToken = jsonNode.get("access_token").asText();
-            log.info("New access token received: {}", newAccessToken);
+            log.info("New access token for Oauth2 received!");
             return newAccessToken;
         } catch (Exception e) {
             log.error("Failed to refresh OAuth2 token", e);
@@ -72,9 +72,9 @@ public class GoogleOAuthHelper implements SchedulingConfigurer {
     public void refreshOAuthToken() {
         try {
             String refreshToken = getConfigValue(EMAIL_REFRESH_TOKEN, configurationRepository, OTP.name());
-            String newAccessToken = refreshOAuthAccessToken(refreshToken);
+            String newAccessToken = getNewOAuthAccessToken(refreshToken);
 
-            // Store new token
+            // Store new access token
             ConfigurationEntity config = configurationRepository.findByConfigCode(EMAIL_ACCESS_TOKEN_CONFIG.name())
                     .orElse(new ConfigurationEntity(EMAIL_ACCESS_TOKEN_CONFIG.name(), newAccessToken, LocalDate.now()));
             config.setConfigValue(newAccessToken);
@@ -88,11 +88,10 @@ public class GoogleOAuthHelper implements SchedulingConfigurer {
 
     @Override
     public void configureTasks(@NonNull ScheduledTaskRegistrar taskRegistrar) {
-        long refreshRate = Long.parseLong(getConfigValue(EMAIL_REFRESH_ACCESS_TOKEN_RATE.name(), configurationRepository, "2700000"));
+        long refreshRate = Long.parseLong(getConfigValue(EMAIL_REFRESH_ACCESS_TOKEN_RATE.name(), configurationRepository, "3500000"));
         // Initialize scheduler only once and store it
-        //  this executor won't be automatically shut down by Spring.
-        //  If you ever need to stop or manage your scheduled tasks, it could be more efficient to manage the executor yourself
-        //  (for example, by storing it as a field)
+        // This executor won't be automatically shut down by Spring.
+        // Storing it as a field to stop or manage your scheduled tasks
         if (scheduler == null || scheduler.isShutdown()) {
             scheduler = Executors.newSingleThreadScheduledExecutor();
         }
