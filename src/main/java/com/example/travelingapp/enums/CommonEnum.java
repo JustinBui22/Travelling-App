@@ -8,6 +8,7 @@ public enum CommonEnum {
     TEST(Group.FLOW),
     REGISTER(Group.FLOW),
     LOGIN(Group.FLOW),
+    LOGOUT(Group.FLOW),
     COMMON(Group.FLOW),
     TOKEN(Group.FLOW),
     OTP(Group.FLOW),

@@ -32,9 +32,6 @@ public class UserDTO {
 
     private String referredCode;
 
-    @NotBlank(message = "OTP verification method cannot be null or empty")
-    private String otpVerificationMethod;
-
     @NotBlank(message = "OTP cannot be null or empty")
     private String otp;
 

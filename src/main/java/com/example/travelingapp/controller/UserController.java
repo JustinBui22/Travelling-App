@@ -4,6 +4,7 @@ import com.example.travelingapp.dto.LoginDTO;
 import com.example.travelingapp.dto.UserDTO;
 import com.example.travelingapp.response_template.ResponseBody;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,6 @@ public interface UserController {
     ResponseEntity<ResponseBody<Object>> login(@Valid @RequestBody LoginDTO loginRequest);
 
     @PostMapping("/logout")
-    ResponseEntity<ResponseBody<Object>> logout(@Valid @RequestBody LoginDTO loginRequest);
+    ResponseEntity<ResponseBody<Object>> logout(@NotNull @RequestParam(name = "username") String username);
 
 }

@@ -35,10 +35,16 @@ public class GoogleOAuthHelper implements SchedulingConfigurer {
         this.configurationRepository = configurationRepository;
     }
 
-    public String getNewOAuthAccessToken(String refreshToken) {
-        try {
-            RestTemplate restTemplate = new RestTemplate();
+    public String getNewRefreshToken() {
+        return null;
+    }
 
+    public void refreshOAuthToken() {
+        try {
+        //    String refreshToken = getNewRefreshToken();
+            String refreshToken = getConfigValue(EMAIL_REFRESH_TOKEN, configurationRepository, OTP.name());
+
+            RestTemplate restTemplate = new RestTemplate();
             // Prepare request data
             String clientId = getConfigValue(EMAIL_CLIENT_ID.name(), configurationRepository, OTP.name());
             String clientSecret = getConfigValue(EMAIL_CLIENT_SECRET.name(), configurationRepository, OTP.name());
@@ -62,18 +68,6 @@ public class GoogleOAuthHelper implements SchedulingConfigurer {
 
             String newAccessToken = jsonNode.get("access_token").asText();
             log.info("New access token for Oauth2 received!");
-            return newAccessToken;
-        } catch (Exception e) {
-            log.error("Failed to refresh OAuth2 token", e);
-            throw new BusinessException(INTERNAL_SERVER_ERROR, OTP.name());
-        }
-    }
-
-    public void refreshOAuthToken() {
-        try {
-            String refreshToken = getConfigValue(EMAIL_REFRESH_TOKEN, configurationRepository, OTP.name());
-            String newAccessToken = getNewOAuthAccessToken(refreshToken);
-
             // Store new access token
             ConfigurationEntity config = configurationRepository.findByConfigCode(EMAIL_ACCESS_TOKEN_CONFIG.name())
                     .orElse(new ConfigurationEntity(EMAIL_ACCESS_TOKEN_CONFIG.name(), newAccessToken, LocalDate.now()));
@@ -82,7 +76,8 @@ public class GoogleOAuthHelper implements SchedulingConfigurer {
             configurationRepository.save(config);
             log.info("OAuth2 token refreshed successfully.");
         } catch (Exception e) {
-            log.error("Error refreshing OAuth2 token", e);
+            log.error("Failed to refresh OAuth2 token!", e);
+            throw new BusinessException(INTERNAL_SERVER_ERROR, OTP.name());
         }
     }
 

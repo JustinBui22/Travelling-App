@@ -33,8 +33,8 @@ public class UserControllerImpl implements UserController {
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
     }
 
-    public ResponseEntity<ResponseBody<Object>> logout(LoginDTO loginRequest) {
-        CompleteResponse<Object> response = userService.logout(loginRequest);
+    public ResponseEntity<ResponseBody<Object>> logout(String username) {
+        CompleteResponse<Object> response = userService.logout(username);
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
     }
 }
