@@ -99,7 +99,7 @@ public class TokenFilter extends OncePerRequestFilter {
         Claims claims = (Claims) validateTokenResponse.getResponseBody().getBody();
         String userName = claims.getSubject();
         String sessionToken = request.getHeader("Session-Token");
-        if (sessionToken == null || !tokenServiceImpl.isSessionTokenValid(userName, sessionToken)) {
+        if (sessionToken == null || tokenServiceImpl.isSessionTokenInvalid(userName, sessionToken)) {
             log.error("Invalid session token for user to log out: {}", userName);
             throw new BusinessException(SESSION_TOKEN_INVALID, TOKEN.name());
         }
@@ -120,7 +120,7 @@ public class TokenFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         // Validate session token globally (fallback mechanism)
         String sessionToken = request.getHeader("Session-Token");
-        if (sessionToken == null || !tokenServiceImpl.isSessionTokenValid(userName, sessionToken)) {
+        if (sessionToken == null || tokenServiceImpl.isSessionTokenInvalid(userName, sessionToken)) {
             log.error("Invalid session token for user: {}", userName);
             throw new BusinessException(SESSION_TOKEN_INVALID, TOKEN.name());
         }

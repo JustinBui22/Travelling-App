@@ -14,10 +14,13 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -154,42 +157,18 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public CompleteResponse<Object> getActiveSessionToken(String userName) {
-        try {
-            List<SessionTokenStoreEntity> sessionTokenList = sessionTokenRepository.findAllByUserName(userName);
-            log.info("Session tokens retrieved for user {} successfully!", userName);
-            return getCompleteResponse(errorCodeRepository, TOKEN_RETRIEVE_SUCCESS, TOKEN.name(), sessionTokenList);
-        } catch (Exception e) {
-            log.error("Session token retrieved failed!");
-            throw new BusinessException(INTERNAL_SERVER_ERROR, COMMON.name());
-        }
-    }
-
-    @Override
-    public void invalidateOldestSessionToken(String userName) {
-        Optional<SessionTokenStoreEntity> tokenOptional = sessionTokenRepository.findByUserNameOrderByCreatedDate(userName);
-        if (tokenOptional.isPresent()) {
-            sessionTokenRepository.delete(tokenOptional.get());
-            sessionTokenRepository.flush();
-            log.info("Oldest session token deleted for user {} successfully!", userName);
-        } else {
-            log.info("No existing session token to be invalidate for user {}", userName);
-        }
-    }
-
-    @Override
-    public boolean isSessionTokenValid(String username, String token) {
+    public boolean isSessionTokenInvalid(String username, String token) {
         isExceedMaxAllowedSessions(username);
         // Check if the token session is correct
         List<SessionTokenStoreEntity> activeSessionList = sessionTokenRepository.findAllByUserName(username);
         for (SessionTokenStoreEntity sessionTokenStoreEntity : activeSessionList) {
-            if (passwordEncoder.matches(token, sessionTokenStoreEntity.getToken())) {
+            if (passwordEncoder.matches(token, sessionTokenStoreEntity.getSessionToken())) {
                 log.info("User {} session token is valid!", username);
-                return true;
+                return false;
             }
         }
         log.info("User {} session token is invalid!", username);
-        return false;
+        return true;
     }
 
     public void isExceedMaxAllowedSessions(String username) {
@@ -202,7 +181,20 @@ public class TokenServiceImpl implements TokenService {
         }
     }
 
-    public void revokeTokens(String username) {
+    @Override
+    public void revokeSessionTokens(String username) {
+        ServletRequestAttributes attributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        String sessionToken = Objects.requireNonNull(attributes).getRequest().getHeader("Session-Token");
 
+        Optional<SessionTokenStoreEntity> tokenOptional = sessionTokenRepository.findByUserNameAndSessionToken(username, sessionToken);
+        if (tokenOptional.isPresent()) {
+            sessionTokenRepository.delete(tokenOptional.get());
+            sessionTokenRepository.flush();
+            log.info("Session token revoked for user {} successfully!", username);
+        } else {
+            log.error("No existing session token to be revoked for user {}", username);
+            throw new BusinessException(SESSION_TOKEN_INVALID, TOKEN.name());
+        }
     }
 }
