@@ -11,5 +11,5 @@ public interface UserService {
 
     CompleteResponse<Object> login(LoginDTO loginRequest);
 
-    CompleteResponse<Object> logout(LoginDTO loginRequest);
+    CompleteResponse<Object> logout(String username);
 }

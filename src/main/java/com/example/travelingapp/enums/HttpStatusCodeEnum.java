@@ -29,6 +29,7 @@ public enum HttpStatusCodeEnum {
     EMAIL_SENT_FAIL(620, Series.ERROR, "Email sent fail"),
     MAX_OTP_RETRY(621, Series.ERROR, "Max OTP retry exceeds"),
     VERIFICATION_OTP_EXPIRED(622, Series.ERROR, "Verification OTP expires"),
+    OTP_BLOCKED_OR_NOT_FOUND(623, Series.ERROR, "OTP is currently blocked or not found"),
 
     CONTINUE(100, HttpStatusCodeEnum.Series.INFORMATIONAL, "Continue"),
     SWITCHING_PROTOCOLS(101, HttpStatusCodeEnum.Series.INFORMATIONAL, "Switching Protocols"),

@@ -176,31 +176,25 @@ public class OtpServiceImpl implements OtpService {
         Optional<OtpCheckEntity> otpCheckEntityOptional = otpCheckRepository.findByUsernameAndBlock(otpDTO.getUserName(), false);
         if (otpCheckEntityOptional.isEmpty()) {
             log.error("There is no OTP check entity for verification!");
-            throw new BusinessException(INVALID_INPUT, OTP.name());
+            throw new BusinessException(OTP_BLOCKED_OR_NOT_FOUND, OTP.name());
         }
         OtpCheckEntity otpCheckEntity = otpCheckEntityOptional.get();
-
-        // OTP does not match
-        if (!otpDTO.getOtp().equals(otpCheckEntityOptional.get().getNewestOtp())) {
-            verifyOtpFailed(maxRetryOtp, restrictedOtpDuration, otpCheckEntity);
-            throw new BusinessException(OTP_VERIFICATION_FAIL, OTP.name());
-        }
 
         // Check if OTP has expired
         if (otpCheckEntity.getOtpExpirationTime() != null && LocalDateTime.now().isAfter(otpCheckEntity.getOtpExpirationTime())) {
             log.info("Verification OTP has expired!");
-            otpCheckEntity.setRetryCount(otpCheckEntity.getRetryCount() + 1);
             verifyOtpFailed(maxRetryOtp, restrictedOtpDuration, otpCheckEntity);
             throw new BusinessException(VERIFICATION_OTP_EXPIRED, OTP.name());
         }
 
-        // Check if OTP matches
-        if (otpDTO.getOtp().equals(otpCheckEntityOptional.get().getNewestOtp())) {
+        // OTP does not match
+        if (!otpDTO.getOtp().equals(otpCheckEntityOptional.get().getNewestOtp())) {
+            log.info("Verification OTP does not match!");
+            verifyOtpFailed(maxRetryOtp, restrictedOtpDuration, otpCheckEntity);
+            throw new BusinessException(OTP_VERIFICATION_FAIL, OTP.name());
+        } else {
             return getCompleteResponse(errorCodeRepository, OTP_VERIFICATION_SUCCESS, OTP.name(), null);
         }
-        log.info("OTP check entity for verification failed!");
-        verifyOtpFailed(maxRetryOtp, restrictedOtpDuration, otpCheckEntity);
-        return getCompleteResponse(errorCodeRepository, OTP_VERIFICATION_FAIL, OTP.name(), null);
     }
 
     private void verifyOtpFailed(int maxRetryOtp, long restrictedOtpDuration, OtpCheckEntity otpCheckEntity) {

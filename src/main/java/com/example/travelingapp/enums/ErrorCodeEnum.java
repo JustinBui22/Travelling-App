@@ -11,6 +11,7 @@ import static com.example.travelingapp.enums.CommonEnum.*;
 public enum ErrorCodeEnum {
     USER_CREATED("E000", "User created", REGISTER, HttpStatusCodeEnum.OK),
     LOGIN_SUCCESS("E000", "Log in successfully", LOGIN, HttpStatusCodeEnum.OK),
+    LOGOUT_SUCCESS("E000", "Log out successfully", LOGOUT, HttpStatusCodeEnum.OK),
     TOKEN_GENERATE_SUCCESS("E000", "Token generate successfully", TOKEN, HttpStatusCodeEnum.OK),
     TOKEN_RETRIEVE_SUCCESS("E000", "Token retrieved successfully", TOKEN, HttpStatusCodeEnum.OK),
     TOKEN_VERIFY_SUCCESS("E000", "Token verified successfully", TOKEN, HttpStatusCodeEnum.OK),
@@ -41,11 +42,12 @@ public enum ErrorCodeEnum {
     OTP_VERIFICATION_FAIL("E020", "OTP code verification fail", COMMON, HttpStatusCodeEnum.OTP_VERIFICATION_FAIL),
     TOKEN_NOT_FOUND("E021", "Token not found", TOKEN, HttpStatusCodeEnum.OK),
     MAX_SESSIONS_REACHED("E022","Max session reached", LOGIN, HttpStatusCodeEnum.MAX_SESSIONS_REACHED),
-    SESSION_TOKEN_INVALID("E023","Max session reached", LOGIN, HttpStatusCodeEnum.MAX_SESSIONS_REACHED),
+    SESSION_TOKEN_INVALID("E023","Token session invalid", LOGIN, HttpStatusCodeEnum.MAX_SESSIONS_REACHED),
     SMS_SENT_FAIL("E024", "Sms sent failed", SMS, HttpStatusCodeEnum.SMS_SENT_FAIL),
     EMAIL_SENT_FAIL("E025", "Email sent failed", SMS, HttpStatusCodeEnum.EMAIL_SENT_FAIL),
     MAX_OTP_RETRY("E026", "Max OTP retry exceeded", OTP, HttpStatusCodeEnum.MAX_OTP_RETRY),
     VERIFICATION_OTP_EXPIRED("E027", "Verification OTP expired", OTP, HttpStatusCodeEnum.VERIFICATION_OTP_EXPIRED),
+    OTP_BLOCKED_OR_NOT_FOUND("E028", "OTP is currently blocked or not found", OTP, HttpStatusCodeEnum.OTP_BLOCKED_OR_NOT_FOUND),
     ;
 
 

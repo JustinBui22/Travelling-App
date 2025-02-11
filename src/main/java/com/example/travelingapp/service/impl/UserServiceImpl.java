@@ -53,22 +53,22 @@ public class UserServiceImpl implements UserService {
     @Override
     public CompleteResponse<Object> createNewUser(UserDTO registerRequest) {
         ErrorCodeEnum errorCodeEnum;
-        Optional<User> user = userRepository.findByUsername(registerRequest.getUsername());
+        Optional<User> userOptional = userRepository.findByUsernameAndActive(registerRequest.getUsername(), true);
         try {
             if (!validateUsername(registerRequest.getUsername(), configurationRepository.findByConfigCode(USERNAME_PATTERN.name()))) {
                 log.info("Username format is invalid!");
                 throw new BusinessException(USERNAME_FORMAT_INVALID, REGISTER.name());
             }
             // Check if username is taken
-            else if (user.isPresent()) {
-                log.info("Username {} is already taken!", user.get().getUsername());
+            else if (userOptional.isPresent()) {
+                log.info("Username {} is already taken!", userOptional.get().getUsername());
                 throw new BusinessException(USERNAME_TAKEN, REGISTER.name());
             }
             // Check if email is inputted and has valid form and if taken
             else if (!StringUtils.isEmpty(registerRequest.getEmail()) && !validateEmailForm(registerRequest.getEmail(), configurationRepository.findByConfigCode(EMAIL_PATTERN.name()))) {
                 log.info("Email format is invalid");
                 throw new BusinessException(EMAIL_PATTERN_INVALID, REGISTER.name());
-            } else if (!StringUtils.isEmpty(registerRequest.getEmail()) && userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
+            } else if (!StringUtils.isEmpty(registerRequest.getEmail()) && userRepository.findByEmailAndActive(registerRequest.getEmail(), true).isPresent()) {
                 log.info("Email is already taken!");
                 throw new BusinessException(EMAIL_TAKEN, REGISTER.name());
             }
@@ -114,12 +114,21 @@ public class UserServiceImpl implements UserService {
         tokenServiceImpl.isExceedMaxAllowedSessions(username);
         ErrorCodeEnum errorCodeEnum;
         boolean isPhoneNumber = validatePhoneForm(username, configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()));
-        // Retrieve the user based on username type (phone number or username)
-        Optional<User> userOptional = userRepository.findByUsernameAndActive(username, true);
+        boolean isEmail = validateEmailForm(username, configurationRepository.findByConfigCode(EMAIL_PATTERN.name()));
+
+        // Retrieve the user based on username type (phone number or username or email)
+        Optional<User> userOptional;
+        if (isPhoneNumber) {
+            userOptional = userRepository.findByPhoneNumberAndActive(username, true);
+        } else if (isEmail) {
+            userOptional = userRepository.findByEmailAndActive(username, true);
+        } else {
+            userOptional = userRepository.findByUsernameAndActive(username, true);
+        }
         try {
             if (userOptional.isEmpty()) {
                 log.error("User {} not found!", username);
-                throw new BusinessException(USER_NOT_FOUND, REGISTER.name());
+                throw new BusinessException(USER_NOT_FOUND, LOGIN.name());
             }
             User user = userOptional.get();
             // check if password matches and display corresponding error code.
@@ -130,7 +139,7 @@ public class UserServiceImpl implements UserService {
             if (isPasswordCorrect) {
                 log.info("Current user: {}", user.getUsername());
                 // Create an authentication object from the user
-                Authentication authentication = new UsernamePasswordAuthenticationToken(user, user.getUsername(), user.getAuthorities());
+                Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUsername(), null, user.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 // Change phoneNumber to userName
                 if (isPhoneNumber) {
@@ -154,7 +163,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CompleteResponse<Object> logout(LoginDTO loginRequest) {
-        return null;
+    public CompleteResponse<Object> logout(String username) {
+        try {
+            // Check if the user exists
+            Optional<User> userOptional = userRepository.findByUsernameAndActive(username, true);
+            if (userOptional.isEmpty()) {
+                log.error("User {} not found to log out!", username);
+                throw new BusinessException(USER_NOT_FOUND, LOGOUT.name());
+            }
+            // Revoke JWT and session token
+            tokenServiceImpl.revokeTokens(username);
+            // Clear security context
+            SecurityContextHolder.clearContext();
+            log.info("User {} logged out successfully!", username);
+            return getCompleteResponse(errorCodeRepository, LOGOUT_SUCCESS, LOGOUT.name(), null);
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("There has been an error in logging out user {}!", username, e);
+            throw new BusinessException(INTERNAL_SERVER_ERROR, LOGOUT.name());
+        }
     }
 }
