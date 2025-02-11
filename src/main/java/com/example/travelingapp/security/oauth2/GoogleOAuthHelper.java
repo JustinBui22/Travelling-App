@@ -35,13 +35,8 @@ public class GoogleOAuthHelper implements SchedulingConfigurer {
         this.configurationRepository = configurationRepository;
     }
 
-    public String getNewRefreshToken() {
-        return null;
-    }
-
     public void refreshOAuthToken() {
         try {
-        //    String refreshToken = getNewRefreshToken();
             String refreshToken = getConfigValue(EMAIL_REFRESH_TOKEN, configurationRepository, OTP.name());
 
             RestTemplate restTemplate = new RestTemplate();
@@ -63,20 +58,32 @@ public class GoogleOAuthHelper implements SchedulingConfigurer {
             ResponseEntity<String> response = restTemplate.postForEntity(tokenUrl, request, String.class);
 
             // Parse JSON response
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(response.getBody());
-
-            String newAccessToken = jsonNode.get("access_token").asText();
-            log.info("New access token for Oauth2 received!");
-            // Store new access token
-            ConfigurationEntity config = configurationRepository.findByConfigCode(EMAIL_ACCESS_TOKEN_CONFIG.name())
-                    .orElse(new ConfigurationEntity(EMAIL_ACCESS_TOKEN_CONFIG.name(), newAccessToken, LocalDate.now()));
-            config.setConfigValue(newAccessToken);
-            config.setModifiedDate(LocalDate.now());
-            configurationRepository.save(config);
-            log.info("OAuth2 token refreshed successfully.");
+            if (response.getStatusCode() == HttpStatus.OK) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(response.getBody());
+                String newAccessToken = jsonNode.get("access_token").asText();
+                // get new refresh token if received
+                String newRefreshToken = jsonNode.findValue("refresh_token") == null ? null : jsonNode.get("refresh_token").asText();
+                if (newRefreshToken != null && !newRefreshToken.equals(refreshToken)) {
+                    ConfigurationEntity oauthRefreshTokenConfig = configurationRepository.findByConfigCode(EMAIL_REFRESH_TOKEN.name())
+                            .orElse(new ConfigurationEntity(EMAIL_REFRESH_TOKEN.name(), newRefreshToken, LocalDate.now()));
+                    oauthRefreshTokenConfig.setConfigValue(newRefreshToken);
+                    log.info("New refresh token for Oauth2 received!");
+                }
+                log.info("New access token for Oauth2 received!");
+                // Store new access token
+                ConfigurationEntity config = configurationRepository.findByConfigCode(EMAIL_ACCESS_TOKEN_CONFIG.name())
+                        .orElse(new ConfigurationEntity(EMAIL_ACCESS_TOKEN_CONFIG.name(), newAccessToken, LocalDate.now()));
+                config.setConfigValue(newAccessToken);
+                config.setModifiedDate(LocalDate.now());
+                configurationRepository.save(config);
+                log.info("OAuth2 token refreshed successfully.");
+            }
+            else {
+                log.error(" Error code: {} - Failed to refresh OAuth2 token!", response.getStatusCode());
+            }
         } catch (Exception e) {
-            log.error("Failed to refresh OAuth2 token!", e);
+            log.error("Exception in refreshing OAuth2 token!", e);
             throw new BusinessException(INTERNAL_SERVER_ERROR, OTP.name());
         }
     }

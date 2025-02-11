@@ -172,7 +172,7 @@ public class UserServiceImpl implements UserService {
                 throw new BusinessException(USER_NOT_FOUND, LOGOUT.name());
             }
             // Revoke JWT and session token
-            tokenServiceImpl.revokeTokens(username);
+            tokenServiceImpl.revokeSessionTokens(username);
             // Clear security context
             SecurityContextHolder.clearContext();
             log.info("User {} logged out successfully!", username);

@@ -7,11 +7,9 @@ public interface TokenService {
 
     CompleteResponse<Object> refreshJwtToken(String authorizationHeader, String sessionToken, String userName);
 
-    CompleteResponse<Object> getActiveSessionToken(String userName);
-
     CompleteResponse<Object> generateSessionToken(String userName);
 
-    void invalidateOldestSessionToken(String userName);
+    void revokeSessionTokens(String userName);
 
-    boolean isSessionTokenValid(String userName, String token);
+    boolean isSessionTokenInvalid(String userName, String token);
 }
