@@ -1,25 +1,35 @@
 package com.example.travelingapp.enums;
 
 import lombok.Getter;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.lang.Nullable;
 
 public enum HttpStatusCodeEnum {
     INVALID_INPUT(600, Series.BAD_REQUEST, "Invalid input provided"),
     USERNAME_TAKEN(601, Series.BAD_REQUEST, "Username taken"),
     EMAIL_TAKEN(602, Series.BAD_REQUEST, "Email taken"),
-    EMAIL_PATTERN_INVALID(602, Series.BAD_REQUEST, "Email form is invalid"),
-    PHONE_FORMAT_INVALID(610, Series.BAD_REQUEST, "Phone format is invalid"),
+    EMAIL_PATTERN_INVALID(613, Series.BAD_REQUEST, "Email form is invalid"),
+    PHONE_FORMAT_INVALID(614, Series.BAD_REQUEST, "Phone format is invalid"),
     PASSWORD_NOT_QUALIFIED(603, Series.BAD_REQUEST, "Password not qualified"),
     USER_NOT_FOUND(604, Series.ERROR, "User not found"),
     CLIENT_SERVER_ERROR(605, Series.ERROR, "Client internal server error"),
     PASSWORD_NOT_CORRECT(606, Series.ERROR, "Password not correct"),
     UNDEFINED_ERROR_CODE(607, Series.ERROR, "Undefined error code"),
     UNDEFINED_HTTP_CODE(608, Series.ERROR, "Undefined http status code"),
-    USER_CREATED(609, Series.SUCCESSFUL, "User created successfully"),
-    CONFIG_NOT_FOUND(610, Series.ERROR, "Config in database not found"),
-    USERNAME_FORMAT_INVALID(611, Series.BAD_REQUEST, "Username format invalid"),
-
+    CONFIG_NOT_FOUND(609, Series.ERROR, "Config in database not found"),
+    USERNAME_FORMAT_INVALID(610, Series.BAD_REQUEST, "Username format invalid"),
+    TOKEN_GENERATE_FAIL(611, Series.ERROR, "Token generated fail"),
+    TOKEN_VERIFY_FAIL(612, Series.ERROR, "Token verified fail"),
+    TOKEN_EXPIRE(613, Series.ERROR, "Token expires"),
+    INPUT_FORMAT_INVALID(614, Series.ERROR, "Input format invalid"),
+    OTP_VERIFICATION_FAIL(615, Series.ERROR, "OTP code verification fail"),
+    TOKEN_NOT_FOUND(616, Series.ERROR, "OTP code verification fail"),
+    MAX_SESSIONS_REACHED(617, Series.ERROR, "Max sessions reached"),
+    SESSION_TOKEN_INVALID(618, Series.ERROR, "Session token invalid"),
+    SMS_SENT_FAIL(619, Series.ERROR, "SMS sent fail"),
+    EMAIL_SENT_FAIL(620, Series.ERROR, "Email sent fail"),
+    MAX_OTP_RETRY(621, Series.ERROR, "Max OTP retry exceeds"),
+    VERIFICATION_OTP_EXPIRED(622, Series.ERROR, "Verification OTP expires"),
+    OTP_BLOCKED_OR_NOT_FOUND(623, Series.ERROR, "OTP is currently blocked or not found"),
 
     CONTINUE(100, HttpStatusCodeEnum.Series.INFORMATIONAL, "Continue"),
     SWITCHING_PROTOCOLS(101, HttpStatusCodeEnum.Series.INFORMATIONAL, "Switching Protocols"),
@@ -143,19 +153,6 @@ public enum HttpStatusCodeEnum {
 
     public Series series() {
         return this.series;
-    }
-
-    public String reasonPhrase() {
-        return this.reasonPhrase;
-    }
-
-    public static HttpStatusCodeEnum getHttpFromErrorCode(String errorCode) {
-        for (HttpStatusCodeEnum httpStatusCodeEnum : HttpStatusCodeEnum.values()) {
-            if (String.valueOf(httpStatusCodeEnum.value()).equals(errorCode)) {
-                return httpStatusCodeEnum;
-            }
-        }
-        return UNDEFINED_HTTP_CODE;
     }
 
     public boolean is1xxInformational() {
