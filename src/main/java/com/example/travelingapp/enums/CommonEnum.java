@@ -7,6 +7,7 @@ public enum CommonEnum {
 
     TEST(Group.FLOW),
     REGISTER(Group.FLOW),
+    FORGOT_PASSWORD(Group.FLOW),
     LOGIN(Group.FLOW),
     LOGOUT(Group.FLOW),
     COMMON(Group.FLOW),

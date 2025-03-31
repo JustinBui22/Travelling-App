@@ -6,6 +6,9 @@ import lombok.extern.log4j.Log4j2;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import static com.example.travelingapp.enums.CommonEnum.EMAIL_PATTERN;
+import static com.example.travelingapp.enums.CommonEnum.PHONE_VN_PATTERN;
+
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 @Log4j2
 public class InputValidator {

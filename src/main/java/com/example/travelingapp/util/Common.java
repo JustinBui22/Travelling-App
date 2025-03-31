@@ -2,10 +2,12 @@ package com.example.travelingapp.util;
 
 import com.example.travelingapp.entity.ConfigurationEntity;
 import com.example.travelingapp.entity.ErrorCodeEntity;
+import com.example.travelingapp.entity.User;
 import com.example.travelingapp.enums.CommonEnum;
 import com.example.travelingapp.enums.HttpStatusCodeEnum;
 import com.example.travelingapp.exception_handler.exception.BusinessException;
 import com.example.travelingapp.repository.ConfigurationRepository;
+import com.example.travelingapp.repository.UserRepository;
 import lombok.extern.log4j.Log4j2;
 
 import java.util.Arrays;
@@ -13,6 +15,8 @@ import java.util.Optional;
 
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
+import static com.example.travelingapp.validator.InputValidator.validateEmailForm;
+import static com.example.travelingapp.validator.InputValidator.validatePhoneForm;
 
 @Log4j2
 public class Common {
@@ -96,5 +100,21 @@ public class Common {
                     log.error("There is no config value for {} ---> Getting default value {}!", key, defaultValue);
                     return defaultValue;
                 });
+    }
+
+    public static Optional<User> findUser(String username, ConfigurationRepository configurationRepository, UserRepository userRepository) {
+        boolean isPhoneNumber = validatePhoneForm(username, configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()));
+        boolean isEmail = validateEmailForm(username, configurationRepository.findByConfigCode(EMAIL_PATTERN.name()));
+
+        // Retrieve the user based on username type (phone number or username or email)
+        Optional<User> userOptional;
+        if (isPhoneNumber) {
+            userOptional = userRepository.findByPhoneNumberAndActive(username, true);
+        } else if (isEmail) {
+            userOptional = userRepository.findByEmailAndActive(username, true);
+        } else {
+            userOptional = userRepository.findByUsernameAndActive(username, true);
+        }
+        return userOptional;
     }
 }
