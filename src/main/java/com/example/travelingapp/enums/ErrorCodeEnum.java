@@ -10,6 +10,7 @@ import static com.example.travelingapp.enums.CommonEnum.*;
 @Getter
 public enum ErrorCodeEnum {
     USER_CREATED("E000", "User created", REGISTER, HttpStatusCodeEnum.OK),
+    USER_EXISTED("E000", "User existed", COMMON, HttpStatusCodeEnum.OK),
     LOGIN_SUCCESS("E000", "Log in successfully", LOGIN, HttpStatusCodeEnum.OK),
     LOGOUT_SUCCESS("E000", "Log out successfully", LOGOUT, HttpStatusCodeEnum.OK),
     TOKEN_GENERATE_SUCCESS("E000", "Token generate successfully", TOKEN, HttpStatusCodeEnum.OK),

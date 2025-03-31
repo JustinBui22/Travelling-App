@@ -23,8 +23,8 @@ public class UserControllerImpl implements UserController {
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
     }
 
-    public ResponseEntity<ResponseBody<Object>> createNewUserByEmail(UserDTO registerRequest) {
-        CompleteResponse<Object> response = userService.createNewUserByEmail(registerRequest);
+    public ResponseEntity<ResponseBody<Object>> forgotPassword(String username, String newPassword) {
+        CompleteResponse<Object> response = userService.resetPassword(username, newPassword);
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
     }
 
@@ -36,6 +36,13 @@ public class UserControllerImpl implements UserController {
     public ResponseEntity<ResponseBody<Object>> logout(String username) {
         CompleteResponse<Object> response = userService.logout(username);
         return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
+    }
+
+    @Override
+    public ResponseEntity<ResponseBody<Object>> checkUserExisted(String userInput) {
+        CompleteResponse<Object> response = userService.checkUserExisted(userInput);
+        return new ResponseEntity<>(response.getResponseBody(), HttpStatusCode.valueOf(response.getHttpCode()));
+
     }
 }
 

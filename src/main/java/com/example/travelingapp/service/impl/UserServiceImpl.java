@@ -27,6 +27,7 @@ import java.util.*;
 import static com.example.travelingapp.enums.CommonEnum.*;
 import static com.example.travelingapp.enums.ErrorCodeEnum.*;
 import static com.example.travelingapp.response_template.CompleteResponse.getCompleteResponse;
+import static com.example.travelingapp.util.Common.findUser;
 import static com.example.travelingapp.util.DateTimeFormatter.toLocalDate;
 import static com.example.travelingapp.validator.InputValidator.*;
 
@@ -88,7 +89,7 @@ public class UserServiceImpl implements UserService {
                 User newUser = new User(registerRequest.getUsername(), passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true);
                 userRepository.save(newUser);
                 log.info("User has been created!");
-                errorCodeEnum = USER_CREATED;
+                errorCodeEnum = USER_EXISTED;
             } else {
                 log.error("OTP verification failed!");
                 throw new BusinessException(OTP_VERIFICATION_FAIL, REGISTER.name());
@@ -103,8 +104,30 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CompleteResponse<Object> createNewUserByEmail(UserDTO registerRequest) {
+    public CompleteResponse<Object> resetPassword(String username, String newPassword) {
+        //Check if email/phone existed
+        Optional<User> userOptional = findUser(username, configurationRepository, userRepository);
+        if (userOptional.isEmpty()) {
+            log.error("User {} not found to reset password!", username);
+            throw new BusinessException(USER_NOT_FOUND, FORGOT_PASSWORD.name());
+        }
+        User user = userOptional.get();
+
+        //Verify otp
+
+        //Update new password to db
+
         return null;
+    }
+
+    @Override
+    public CompleteResponse<Object> checkUserExisted(String userInput) {
+        Optional<User> userOptional = findUser(userInput, configurationRepository, userRepository);
+        if (userOptional.isEmpty()) {
+            log.error("User {} not found!", userInput);
+            throw new BusinessException(USER_NOT_FOUND, FORGOT_PASSWORD.name());
+        }
+        return getCompleteResponse(errorCodeRepository, USER_EXISTED, COMMON.name(), userOptional.get().getUsername());
     }
 
     @Override
@@ -113,21 +136,10 @@ public class UserServiceImpl implements UserService {
         // Check if the user has exceeded maxed number of active sessions
         tokenServiceImpl.isExceedMaxAllowedSessions(username);
         ErrorCodeEnum errorCodeEnum;
-        boolean isPhoneNumber = validatePhoneForm(username, configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()));
-        boolean isEmail = validateEmailForm(username, configurationRepository.findByConfigCode(EMAIL_PATTERN.name()));
-
-        // Retrieve the user based on username type (phone number or username or email)
-        Optional<User> userOptional;
-        if (isPhoneNumber) {
-            userOptional = userRepository.findByPhoneNumberAndActive(username, true);
-        } else if (isEmail) {
-            userOptional = userRepository.findByEmailAndActive(username, true);
-        } else {
-            userOptional = userRepository.findByUsernameAndActive(username, true);
-        }
         try {
+            Optional<User> userOptional = findUser(username, configurationRepository, userRepository);
             if (userOptional.isEmpty()) {
-                log.error("User {} not found!", username);
+                log.error("User {} not found to login!", username);
                 throw new BusinessException(USER_NOT_FOUND, LOGIN.name());
             }
             User user = userOptional.get();
@@ -142,7 +154,7 @@ public class UserServiceImpl implements UserService {
                 Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUsername(), null, user.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 // Change phoneNumber to userName
-                if (isPhoneNumber) {
+                if (validatePhoneForm(username, configurationRepository.findByConfigCode(PHONE_VN_PATTERN.name()))) {
                     username = String.valueOf(authentication.getCredentials());
                 }
                 // Generate and return the session and JWT token
