@@ -84,16 +84,21 @@ public class UserServiceImpl implements UserService {
                 throw new BusinessException(PHONE_FORMAT_INVALID, REGISTER.name());
             }
             // Check if OTP code is verified
-            String verifyOtpErrorCode = otpServiceImpl.verifyOtp(new OtpDTO(registerRequest.getUsername(), registerRequest.getOtp())).getResponseBody().getCode();
-            if (verifyOtpErrorCode.equals(OTP_VERIFICATION_SUCCESS.getCode())) {
-                User newUser = new User(registerRequest.getUsername(), passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true);
-                userRepository.save(newUser);
-                log.info("User has been created!");
-                errorCodeEnum = USER_EXISTED;
-            } else {
-                log.error("OTP verification failed!");
-                throw new BusinessException(OTP_VERIFICATION_FAIL, REGISTER.name());
-            }
+//            String verifyOtpErrorCode = otpServiceImpl.verifyOtp(new OtpDTO(registerRequest.getUsername(), registerRequest.getOtp())).getResponseBody().getCode();
+            User newUser = new User(registerRequest.getUsername(), passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true);
+            userRepository.save(newUser);
+            log.info("User has been created!");
+            errorCodeEnum = USER_CREATED;
+
+//            if (verifyOtpErrorCode.equals(OTP_VERIFICATION_SUCCESS.getCode())) {
+//                User newUser = new User(registerRequest.getUsername(), passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getPhoneNumber(), toLocalDate(registerRequest.getDob()), LocalDate.now(), registerRequest.getEmail(), true);
+//                userRepository.save(newUser);
+//                log.info("User has been created!");
+//                errorCodeEnum = USER_EXISTED;
+//            } else {
+//                log.error("OTP verification failed!");
+//                throw new BusinessException(OTP_VERIFICATION_FAIL, REGISTER.name());
+//            }
             return getCompleteResponse(errorCodeRepository, errorCodeEnum, REGISTER.name(), null);
         } catch (BusinessException e) {
             throw e;
@@ -105,19 +110,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CompleteResponse<Object> resetPassword(String username, String newPassword) {
-        //Check if email/phone existed
-        Optional<User> userOptional = findUser(username, configurationRepository, userRepository);
-        if (userOptional.isEmpty()) {
-            log.error("User {} not found to reset password!", username);
-            throw new BusinessException(USER_NOT_FOUND, FORGOT_PASSWORD.name());
+        // Check if email/phone existed
+        try {
+            Optional<User> userOptional = userRepository.findByUsernameAndActive(username, true);
+            if (userOptional.isEmpty()) {
+                log.error("User {} not found to reset password!", username);
+                throw new BusinessException(USER_NOT_FOUND, FORGOT_PASSWORD.name());
+            }
+            User user = userOptional.get();
+            // Update new password to db
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            return getCompleteResponse(errorCodeRepository, RESET_PASSWORD_SUCCESS, COMMON.name(), userOptional.get().getUsername());
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("There has been an error in resetting password for user {}!", username, e);
+            throw new BusinessException(INTERNAL_SERVER_ERROR, COMMON.name());
         }
-        User user = userOptional.get();
-
-        //Verify otp
-
-        //Update new password to db
-
-        return null;
     }
 
     @Override

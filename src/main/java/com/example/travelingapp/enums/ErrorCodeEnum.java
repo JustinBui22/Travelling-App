@@ -21,6 +21,7 @@ public enum ErrorCodeEnum {
     OTP_SENT_SUCCESS("E000","Otp sent successfully", OTP, HttpStatusCodeEnum.OK),
     SMS_SENT_SUCCESS("E000", "Sms sent successfully", SMS, HttpStatusCodeEnum.OK),
     EMAIL_SENT_SUCCESS("E000", "Email sent successfully", EMAIL, HttpStatusCodeEnum.OK),
+    RESET_PASSWORD_SUCCESS("E000", "Password reset successfully", FORGOT_PASSWORD, HttpStatusCodeEnum.OK),
     INVALID_INPUT("E001", "Invalid input provided", REGISTER, HttpStatusCodeEnum.INVALID_INPUT),
     USERNAME_TAKEN("E002", "Username taken", REGISTER, HttpStatusCodeEnum.USERNAME_TAKEN),
     EMAIL_TAKEN("E003", "Email taken", REGISTER, HttpStatusCodeEnum.EMAIL_TAKEN),

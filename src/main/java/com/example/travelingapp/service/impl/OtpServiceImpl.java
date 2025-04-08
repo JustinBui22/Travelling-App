@@ -71,7 +71,10 @@ public class OtpServiceImpl implements OtpService {
                 }
             } else {
                 log.info("Create new OtpCheck entity for user {}!", otpDTO.getUserName());
-                otpCheckEntity = new OtpCheckEntity(otpDTO.getUserName(), otpDTO.getEmail(), LocalDate.now(), otpDTO.getPhoneNumber(), 0, null, false);
+                otpCheckEntity = new
+
+
+                        OtpCheckEntity(otpDTO.getUserName(), otpDTO.getEmail(), LocalDate.now(), otpDTO.getPhoneNumber(), 0, null, false);
             }
             String otpCode = String.valueOf(generateVerificationOtp().getResponseBody().getBody());
             long expirationOtpDuration = convertStringToLong(getConfigValue(OTP_EXPIRATION_TIME.name(), configurationRepository, "120000L"));
